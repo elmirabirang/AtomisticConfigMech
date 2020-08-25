@@ -97,7 +97,6 @@ public:
 
 	    for (At atom=Atoms.begin(); atom!=Atoms.end(); ++atom)
 	    {
-	    	//only for atoms that are labeled
 
 	    	int atom_region=(*atom)->GetAtomRegion();
 	    	if( atom_region!=1 && atom_region!=2 && atom_region!=3)
@@ -150,9 +149,7 @@ public:
 
 
                     Point <3> atomThreeBodyForce(0.,0.,0.);
-//                    atomThreeBodyForce=force.ResultantSWThreeBodyForce(*atom,sigma_AlphaBeta, sigma_AlphaGamma, epsilon_AlphaBetaGamma,
-//	                                                                    Gamma, lambda_AlphaBetaGamma
-//                                                                        ,cosine_teta0, a_AlphaBeta, a_AlphaGamma);
+
 
                     atomThreeBodyForce=(*atom)-> GetForce();
 
@@ -299,7 +296,7 @@ int main()
 
     vector < Atom <3>* > atoms=FindNeighbors(unrelax_atoms,2.6);
 
-    string path4="/calculate/elmira/Implementations/PyQC_C++/pyQC _C++ version/tests/dump.silicon" ;
+    string path4="/calculate/elmira/atomistic_config_mech/results/dump.silicon" ;
 
     writeDataFile (atoms, 1, path4);
 
@@ -341,7 +338,7 @@ int main()
 	}
 
     double tot_energy=0;
-    int number_load_steps=9000;
+    int number_load_steps=1;
     int load_step=0;
     double load=0.0;
 
@@ -365,7 +362,7 @@ int main()
     while (load_step< number_load_steps)
     {
 
-		string path2="/calculate/elmira/Implementations/PyQC_C++/pyQC _C++ version/tests/dump.Si";
+		string path2="/calculate/elmira/Implementations/atomistic_config_mech/results/dump.Si";
 		ofstream file;
 		file.open(path2.c_str());
 
@@ -373,8 +370,8 @@ int main()
     	ofstream MFile;
     	ofstream SFile;
 
-    	string MPath="/calculate/elmira/Implementations/PyQC_C++/pyQC _C++ version/tests/results/dim3/material/silicon/material_config/dump.material";
-    	string SPath="/calculate/elmira/Implementations/PyQC_C++/pyQC _C++ version/tests/results/dim3/spatial/silicon/spatial_config/dump.spatial";
+    	string MPath="/calculate/elmira/Implementations/atomistic_config_mech/results/three_dim/silicon/material/dump.material";
+    	string SPath="/calculate/elmira/Implementations/atomistic_config_mech/results/three_dim/silicon/spatial/dump.spatial";
 
     	load_step+=1;
 
