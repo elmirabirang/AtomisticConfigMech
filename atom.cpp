@@ -160,6 +160,18 @@ Point <dim> Atom <dim>::GetConfigForce()
 }
 
 template <int dim>
+void Atom <dim>::SetDeformForce(Point <dim> atom_deform_force)
+{
+   this->deform_force=atom_deform_force;
+}
+
+template <int dim>
+Point <dim> Atom <dim>::GetDeformForce()
+{
+   return(deform_force);
+}
+
+template <int dim>
 void Atom <dim>::setAtomZone(int zone)
 {
 	this -> atomZone=zone;
