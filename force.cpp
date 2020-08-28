@@ -1937,15 +1937,15 @@ Point <dim> Force <dim>::deformationalprSW3BodyForce(Atom <dim> &atom_alpha, Ato
 }
 
 template <int dim>
-Point <dim> Force <dim>::deformationalcpSW3BodyForce(Atom <dim> &atom_alpha, Atom <dim> &atom_beta, Atom <dim> &atom_gamma,
+Point <dim> Force <dim>::deformationalcpSW3BodyForce(Atom <dim> *atom_alpha, Atom <dim> *atom_beta, Atom <dim> *atom_gamma,
                                                      double sigma_AlphaBeta, double sigma_AlphaGamma,double epsilon_AlphaBetaGamma,
 	                                                 double mu, double eta_AlphaBetaGamma,
                                                      double cosine_teta0, double a_AlphaBeta, double a_AlphaGamma)
 {
 
-	this -> atomi = atom_alpha;
-	this -> atomj = atom_beta;
-	this -> atomk = atom_gamma;
+	this -> atomi = *atom_alpha;
+	this -> atomj = *atom_beta;
+	this -> atomk = *atom_gamma;
 	Point <dim> Result(0.,0.,0.);
 
 	double mat_dist_alphabeta=bond.MaterialBondDistance(atomi, atomj);
@@ -1973,6 +1973,11 @@ Point <dim> Force <dim>::deformationalcpSW3BodyForce(Atom <dim> &atom_alpha, Ato
 	double spa_AlphaGamma_x=normalVectorAlphaGamma.GetXCoord();
 	double spa_AlphaGamma_y=normalVectorAlphaGamma.GetYCoord();
 	double spa_AlphaGamma_z=normalVectorAlphaGamma.GetZCoord();
+	
+	Point <dim> normalVectorBetaGamma=bond.SpatialBondNormal(atomk, atomj);
+	double spa_BetaGamma_x=normalVectorBetaGamma.GetXCoord();
+	double spa_BetaGamma_y=normalVectorBetaGamma.GetYCoord();
+	double spa_BetaGamma_z=normalVectorBetaGamma.GetZCoord();
 	
 	Point <dim> normalVectorAlphaBetaMat=bond.MaterialBondNormal(atomj, atomi);
 	double trace_matAlphaBeta=0;
@@ -2016,6 +2021,8 @@ Point <dim> Force <dim>::deformationalcpSW3BodyForce(Atom <dim> &atom_alpha, Ato
 	
 	double spatial_bond_distance_alphagamma=bond.SpatialBondDistance(atomk,atomi);
 	
+	double spatial_bond_distance_betagamma=bond.SpatialBondDistance(atomk,atomj);
+	
 	double coefficient=2*eta_AlphaBetaGamma*epslion_0_AlphaBetaGamma*area*
 			            exponet_AlphaBeta*exponet_AlphaGamma
 						*(cosine_teta_BetaAlphaGamma-cosine_teta0);
@@ -2038,6 +2045,44 @@ Point <dim> Force <dim>::deformationalcpSW3BodyForce(Atom <dim> &atom_alpha, Ato
 		Result.SetZCoord(coefficient*(-1*cosine_teta_BetaAlphaGamma*(spa_AlphaBeta_z/spatial_bond_distance_alphabeta+
                                       spa_AlphaGamma_z/spatial_bond_distance_alphagamma)+(spa_AlphaGamma_z/spatial_bond_distance_alphabeta)
                                       +(spa_AlphaBeta_z/spatial_bond_distance_alphagamma)));
+		
+		Point <dim> deform_force_atom_beta(0.,0.,0.);
+		
+		deform_force_atom_beta.SetXCoord(coefficient*(-1*cosine_teta_BetaAlphaGamma*(spa_AlphaBeta_x/spatial_bond_distance_alphabeta)
+                                         +(spa_AlphaBeta_x/spatial_bond_distance_alphagamma))
+				                         +(spatial_bond_distance_betagamma/(spatial_bond_distance_alphabeta*spatial_bond_distance_alphagamma))*
+										 spa_BetaGamma_x);
+		
+		deform_force_atom_beta.SetYCoord(coefficient*(-1*cosine_teta_BetaAlphaGamma*(spa_AlphaBeta_y/spatial_bond_distance_alphabeta)
+                                         +(spa_AlphaBeta_y/spatial_bond_distance_alphagamma))
+				                         +(spatial_bond_distance_betagamma/(spatial_bond_distance_alphabeta*spatial_bond_distance_alphagamma))*
+										 spa_BetaGamma_y);
+		
+		deform_force_atom_beta.SetZCoord(coefficient*(-1*cosine_teta_BetaAlphaGamma*(spa_AlphaBeta_z/spatial_bond_distance_alphabeta)
+                                         +(spa_AlphaBeta_z/spatial_bond_distance_alphagamma))
+				                         +(spatial_bond_distance_betagamma/(spatial_bond_distance_alphabeta*spatial_bond_distance_alphagamma))*
+										 spa_BetaGamma_z);
+		
+		atom_beta->SetDeformForce(atom_beta->GetDeformForce()+deform_force_atom_beta);
+		
+		Point <dim> deform_force_atom_gamma(0.,0.,0.);
+		
+		deform_force_atom_gamma.SetXCoord(coefficient*(-1*cosine_teta_BetaAlphaGamma*(spa_AlphaGamma_x/spatial_bond_distance_alphagamma)
+				                          +(spa_AlphaGamma_x/spatial_bond_distance_alphabeta))
+				                          -(spatial_bond_distance_betagamma/(spatial_bond_distance_alphabeta*spatial_bond_distance_alphagamma))*
+														 spa_BetaGamma_x);
+		
+		deform_force_atom_gamma.SetYCoord(coefficient*(-1*cosine_teta_BetaAlphaGamma*(spa_AlphaGamma_y/spatial_bond_distance_alphagamma)
+                                          +(spa_AlphaGamma_y/spatial_bond_distance_alphabeta))
+				                          -(spatial_bond_distance_betagamma/(spatial_bond_distance_alphabeta*spatial_bond_distance_alphagamma))*
+														 spa_BetaGamma_x);
+		
+		deform_force_atom_gamma.SetZCoord(coefficient*(-1*cosine_teta_BetaAlphaGamma*(spa_AlphaGamma_z/spatial_bond_distance_alphagamma)
+                                          +(spa_AlphaGamma_z/spatial_bond_distance_alphabeta))
+				                          -(spatial_bond_distance_betagamma/(spatial_bond_distance_alphabeta*spatial_bond_distance_alphagamma))*
+														 spa_BetaGamma_x);
+		
+		atom_gamma->SetDeformForce(atom_gamma->GetDeformForce()+deform_force_atom_gamma);
 		
 	}
 	
