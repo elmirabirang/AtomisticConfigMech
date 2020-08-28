@@ -56,6 +56,9 @@ class Atom {
    Point <dim> GetConfigForce();
    void SetConfigForce(Point <dim> atom_config_force);
 
+   Point <dim> GetDeformForce();
+   void SetDeformForce(Point <dim> atom_deform_force);
+
    void setAtomZone(int zone);
    int getAtomZone();
 
@@ -79,6 +82,7 @@ class Atom {
 
    Point <dim> force;
    Point <dim> config_force;
+   Point <dim> deform_force;
 
    int atomZone;
 
