@@ -85,7 +85,7 @@ public:
 			                             double A_AlphaBeta, double B_AlphaBeta, double p_AlphaBeta,
 						                 double q_AlphaBeta, double a_AlphaBeta);
 
-	Point <dim> deformationalcpSW3BodyForce(Atom <dim> &atom_alpha, Atom <dim> &atom_beta, Atom <dim> &atom_gamma,
+	Point <dim> deformationalcpSW3BodyForce(Atom <dim> *atom_alpha, Atom <dim> *atom_beta, Atom <dim> *atom_gamma,
 			                                double sigma_AlphaBeta,double sigma_AlphaGamma,double epsilon_AlphaBetaGamma,
 										    double mu, double eta_AlphaBetaGamma,
                                             double cosine_teta0, double a_AlphaBeta, double a_AlphaGamma);
