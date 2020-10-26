@@ -8,10 +8,7 @@
  *      University of Erlangen-Nürnberg
  */
 
-#include "atom.h"
 #include "energy.h"
-#include"bond.h"
-#include "matrix.h"
 #include <cmath>
 #include <vector>
 #include <iostream>
@@ -45,9 +42,9 @@ double Energy <dim>::InteratomicEnergy (Atom <dim> &atoma, Atom <dim> &atomb)
 	this -> atomj=atomb;
 
 	Point <dim> spatialPositionA=atoma.GetSpatialPosition();
-	Point <dim> spatoalPositionB=atomb.GetSpatialPosition();
+	Point <dim> spatialPositionB=atomb.GetSpatialPosition();
 
-	Point <dim> interatomic_distance=spatoalPositionB-spatialPositionA;
+	Point <dim> interatomic_distance=spatialPositionB-spatialPositionA;
 	double distance=(pow(interatomic_distance.GetXCoord(),2) +
 			         pow(interatomic_distance.GetYCoord(),2) +
 			         pow(interatomic_distance.GetZCoord(),2));
@@ -69,6 +66,7 @@ double Energy <dim>::ConfigInteratomicEnergy (Atom <dim> &atoma, Atom <dim> &ato
 
 	this -> atomi=atoma;
 	this -> atomj=atomb;
+	Bond <dim> bond;
 
 	double material_stretch=bond.MaterialBondStretch(atomi,atomj);
 	double material_distance=bond.MaterialBondDistance(atomi,atomj);
@@ -128,6 +126,7 @@ double Energy <dim>::Material_Interatomic_Engergy(Atom <dim> atoma, Atom <dim> a
 		{
 	this -> atomi=atoma;
 	this -> atomj=atomb;
+	Bond <dim> bond;
 
 	double interatomic_stretch=bond.MaterialBondStretch(atomi,atomj);
 	double energy_ij=(4*epsilon*interatomic_stretch)*(pow(sigma*interatomic_stretch,12)-pow(sigma*interatomic_stretch,6));
@@ -142,6 +141,7 @@ double Energy <dim>::Spatial_Interatomic_Energy(Atom <dim> atoma, Atom <dim> ato
 		{
 	this -> atomi=atoma;
 	this -> atomj=atomb;
+	Bond <dim> bond;
 
 	double interatomic_stretch=bond.SpatialBondStretch(atomi,atomj);
 	double energy_ij=4*epsilon*(pow((sigma/interatomic_stretch),12)-pow((sigma/interatomic_stretch),6));
@@ -225,6 +225,7 @@ double Energy <dim>::ConfigTotPotentialEnergy(vector < Atom <dim>* > atoms_list)
 
 	this->atoms=atoms_list;
 	double potential_energy=0;
+	Bond <dim> bond;
 
 	typedef typename vector < Atom <dim>* >::iterator At;
 
@@ -362,6 +363,7 @@ double Energy <dim>:: morseFunction(vector < Atom <dim>* > atoms_list, double al
 	double inv_h=1.0/h;
 	double psi=0.0;
 	double potential_eng_tot=0;
+	Bond <dim> bond;
 
 	for (At atom= atoms_list.begin(); atom!= atoms_list.end(); ++atom)
 	{
@@ -470,6 +472,7 @@ double Energy <dim> :: embeddingEnergy (vector <Atom <dim> * > atoms_list, doubl
 
 	typedef typename vector < Atom <dim>* >::iterator At;
 	double inv_h=1.0/h;
+	Bond <dim> bond;
 
 	double potential_eng_tot=0.;
 
@@ -594,6 +597,7 @@ double Energy <dim>::stillingerWeberTwoBody(Atom <dim> atom_Alpha, Atom <dim> at
 
 	this -> atomi=atom_Alpha;
 	this -> atomj=atom_Beta;
+	Bond <dim> bond;
 
 	Point <dim> spatialPositionAlpha=atom_Alpha.GetSpatialPosition();
 	Point <dim> spatialPositionBeta=atom_Beta.GetSpatialPosition();
@@ -608,6 +612,7 @@ double Energy <dim>::stillingerWeberTwoBody(Atom <dim> atom_Alpha, Atom <dim> at
 
 	if (distance<(a_AlphaBeta*sigma_AlphaBeta))
 	{
+
 
 		energy_ij=A_AlphaBeta*epsilon_AlphaBeta
 			      *(B_AlphaBeta*pow(distanceInv,p_AlphaBeta)-pow(distanceInv,q_AlphaBeta))*
@@ -629,6 +634,7 @@ double Energy <dim>::stillingerWeberThreeBody(Atom <dim> &atom_Beta, Atom <dim> 
 	this -> atomi=atom_Alpha;
 	this -> atomj=atom_Beta;
 	this -> atomk=atom_Gamma;
+	Bond <dim> bond;
 
 	Point <dim> spatialPositionAlpha=atom_Alpha.GetSpatialPosition();
 	Point <dim> spatialPositionBeta=atom_Beta.GetSpatialPosition();
@@ -702,6 +708,7 @@ double Energy <dim>:: totalStillingerWeberEnergy(Atom <dim> *atoma,
 
 	vector < Atom <dim>* > all_neighbors;
 
+
 	double total_2BodyEng=0.;
 	double total_3BodyEng=0.;
 
@@ -711,12 +718,18 @@ double Energy <dim>:: totalStillingerWeberEnergy(Atom <dim> *atoma,
 		all_neighbors.push_back(*beta);
 
 		Atom <dim>* neigh_beta;
+
+		Point <dim> beta_material_position;
+		beta_material_position=(*beta)->GetMaterialPosition();
+		double beta_material_positionX=beta_material_position.GetXCoord();
+
 		neigh_beta=*beta;
 
 		total_2BodyEng+=stillingerWeberTwoBody(*atoma,*neigh_beta,
-				                               sigma_AlphaBeta, epsilon_AlphaBetaGamma,
-                                               A_AlphaBeta, B_AlphaBeta,
+											   sigma_AlphaBeta, epsilon_AlphaBetaGamma,
+											   A_AlphaBeta, B_AlphaBeta,
 											   p_AlphaBeta, q_AlphaBeta, a_AlphaBeta );
+
 
 	}
 
@@ -734,33 +747,36 @@ double Energy <dim>:: totalStillingerWeberEnergy(Atom <dim> *atoma,
 		Atom <dim> *Neighbor;
 		Neighbor=*Ngh;
 
-		int Neigh_id=(*Neighbor).GetID();
+		Point <dim> Neighbor_material_position=(*Neighbor).GetMaterialPosition();
+		double Neighbor_material_positionX=Neighbor_material_position.GetXCoord();
 
+			int Neigh_id=(*Neighbor).GetID();
 
-		for (Neigh ngh=all_neighbors.begin(); ngh!=all_neighbors.end(); ++ngh)
-		{
-
-			Atom <dim> *neighbor;
-			neighbor=*ngh;
-
-			int neigh_id=(*neighbor).GetID();
-
-			if (neigh_id > Neigh_id)
+			for (Neigh ngh=all_neighbors.begin(); ngh!=all_neighbors.end(); ++ngh)
 			{
 
-				total_3BodyEng+=stillingerWeberThreeBody(*Neighbor,*atoma,*neighbor,
-						                                 sigma_AlphaBeta,
-								                         sigma_AlphaGamma,epsilon_AlphaBetaGamma, Gamma, lambda_AlphaBetaGamma
-														 , cosine_teta0 , a_AlphaBeta, a_AlphaGamma);
+				Atom <dim> *neighbor;
+				neighbor=*ngh;
+
+				Point <dim> neighbor_material_position=(*neighbor).GetMaterialPosition();
+				double neighbor_material_positionX= neighbor_material_position.GetXCoord();
+
+
+				int neigh_id=(*neighbor).GetID();
+
+				if (neigh_id > Neigh_id)
+				{
+
+					total_3BodyEng+=stillingerWeberThreeBody(*Neighbor,*atoma,*neighbor,
+															 sigma_AlphaBeta,
+															 sigma_AlphaGamma,epsilon_AlphaBetaGamma, Gamma, lambda_AlphaBetaGamma
+															 , cosine_teta0 , a_AlphaBeta, a_AlphaGamma);
+
+				}
 
 			}
 
-
-		}
-
-
 	}
-
 
 	double totalSWEng=total_2BodyEng+total_3BodyEng;
 	return(totalSWEng);
@@ -775,6 +791,7 @@ double Energy <dim>::deformationalSWtwoBody(Atom <dim> atom_alpha, Atom <dim> at
 {
 	this->atomi=atom_alpha;
 	this->atomj=atom_beta;
+	Bond <dim> bond;
 
 	double material_bond_distance=bond.MaterialBondDistance(atomi,atomj);
 
@@ -809,6 +826,7 @@ double Energy <dim>::deformationalSWthreeBody(Atom <dim> atom_Alpha, Atom <dim> 
 	this ->atomi=atom_Alpha;
 	this ->atomj=atom_Beta;
 	this ->atomk=atom_Gamma;
+	Bond <dim> bond;
 
 	double mat_dist_alphabeta=bond.MaterialBondDistance(atomi, atomj);
 	double mat_dist_alphagamma=bond.MaterialBondDistance(atomi, atomk);
@@ -885,6 +903,7 @@ double Energy <dim>::configurationalSWtwoBody(Atom <dim> atom_alpha, Atom <dim> 
 
 	this -> atomi = atom_alpha;
 	this -> atomj = atom_beta;
+	Bond <dim> bond;
 
 	double mat_dist_alphabeta=bond.MaterialBondDistance(atomi, atomj);
 
@@ -933,6 +952,7 @@ double Energy <dim>::configurationalSWthreeBody(Atom <dim> atom_Alpha, Atom <dim
 	this -> atomi = atom_Alpha;
 	this -> atomj = atom_Beta;
 	this -> atomk = atom_Gamma;
+	Bond <dim> bond;
 
 	double mat_dist_alphabeta=bond.MaterialBondDistance(atomi, atomj);
 	double mat_dist_alphagamma=bond.MaterialBondDistance(atomi, atomk);
@@ -1024,6 +1044,366 @@ double Energy <dim>::configurationalSWthreeBody(Atom <dim> atom_Alpha, Atom <dim
 
 }
 
+template <int dim>
+double Energy <dim>::LennrdJonesPotential(double sigma, double epsilon, double distance_ab)
+{
+
+	double term=pow((sigma/distance_ab),6);
+
+	double energy=4*epsilon*(pow(term,2)-2*term);
+
+	return (energy);
+
+}
+
+template <int dim>
+double Energy <dim>::phaseAverageLJ(vector <Atom <dim>*> atoms, double sigma, double epsilon,
+		                            double boltzman_const, double plancks_const, int num_quad_points)
+{
+
+	typedef typename vector < Atom <dim>* > ::iterator At;
+
+	for(At atom=atoms.begin(); atom < atoms.end(); ++atom)
+	{
+
+		vector < Atom <dim>* > neighbors=(*atom)->Neighbor();
+
+		double atoma_temperature=(*atom)->getTemperature();
+		double sigma_a=sqrt(boltzman_const*atoma_temperature);
+		double frequency_a=(*atom)->getFrequency();
+		double coefficient_a=sqrt(2)*(sigma_a/frequency_a);
+
+		double LJ_potential=0.;
+
+		Point <dim> atoma_mean_position=(*atom)->getSpatialMeanPosition();
+
+		for(At neigh=neighbors.begin(); neigh < neighbors.end(); ++neigh)
+		{
+
+			double atomb_temperature=(*neigh)->getTemperature();
+			double sigma_b=sqrt(boltzman_const*atomb_temperature);
+			double frequency_b=(*neigh)->getFrequency();
+			double coefficient_b=sqrt(2)*(sigma_b/frequency_b);
+
+			Point <dim> atomb_mean_position=(*neigh)->getSpatialMeanPosition();
+
+			for (int n=1; n < num_quad_points; ++n)
+			{
+
+				double weight=pow(M_PI,(n/2))/(2*n);
+				double QP=sqrt(n/2);
+				Point <dim> quadrature_pa;
+				Point <dim> quadrature_pb;
+
+				if (n<4)
+				{
+
+					if (n==1)
+					{
+						quadrature_pa.SetXCoord(coefficient_a*QP);
+						quadrature_pa.SetXCoord(0.);
+						quadrature_pa.SetXCoord(0.);
+
+						quadrature_pb.SetXCoord(0.);
+						quadrature_pb.SetXCoord(0.);
+						quadrature_pb.SetXCoord(0.);
+						Point <dim> dist_vec;
+						double distance=0.;
+						double weighted_energy=0.;
+
+						dist_vec=quadrature_pa-quadrature_pb
+								             +atoma_mean_position-atomb_mean_position;
+
+						distance=dist_vec.PointNorm();
+						weighted_energy=LennrdJonesPotential(sigma, epsilon, distance)*weight;
+
+						LJ_potential=LJ_potential+weighted_energy;
+
+						quadrature_pa.SetXCoord(-coefficient_a*QP);
+						quadrature_pa.SetXCoord(0.);
+						quadrature_pa.SetXCoord(0.);
+
+						quadrature_pb.SetXCoord(0.);
+						quadrature_pb.SetXCoord(0.);
+						quadrature_pb.SetXCoord(0.);
+
+						dist_vec.SetXCoord(0.);
+						dist_vec.SetYCoord(0.);
+						dist_vec.SetZCoord(0.);
+
+						dist_vec=quadrature_pa-quadrature_pb
+								             +atoma_mean_position-atomb_mean_position;
+
+						distance=dist_vec.PointNorm();
+						weighted_energy=LennrdJonesPotential(sigma, epsilon, distance)*weight;
+						LJ_potential=LJ_potential+weighted_energy;
+
+					}
+
+					if (n==2)
+					{
+
+						quadrature_pa.SetXCoord(0.);
+						quadrature_pa.SetXCoord(coefficient_a*QP);
+						quadrature_pa.SetXCoord(0.);
+
+						quadrature_pb.SetXCoord(0.);
+						quadrature_pb.SetXCoord(0.);
+						quadrature_pb.SetXCoord(0.);
+
+						Point <dim> dist_vec(0.,0.,0.);
+						double distance=0.;
+						double weighted_energy=0.;
+
+						dist_vec=quadrature_pa-quadrature_pb
+								 +atoma_mean_position-atomb_mean_position;
+
+						distance=dist_vec.PointNorm();
+						weighted_energy=LennrdJonesPotential(sigma, epsilon, distance)*weight;
+
+						LJ_potential=LJ_potential+weighted_energy;
+
+						quadrature_pa.SetXCoord(0.);
+						quadrature_pa.SetXCoord(-coefficient_a*QP);
+						quadrature_pa.SetXCoord(0.);
+
+						quadrature_pb.SetXCoord(0.);
+						quadrature_pb.SetXCoord(0.);
+						quadrature_pb.SetXCoord(0.);
+
+						dist_vec(0.,0.,0.);
+
+						dist_vec=quadrature_pa-quadrature_pb
+								             +atoma_mean_position-atomb_mean_position;
+
+						distance=dist_vec.PointNorm();
+						weighted_energy=LennrdJonesPotential(sigma, epsilon, distance)*weight;
+						LJ_potential=LJ_potential+weighted_energy;
+
+					}
+
+					if (n==3)
+					{
+						quadrature_pa.SetXCoord(0.);
+						quadrature_pa.SetXCoord(0.);
+						quadrature_pa.SetXCoord(coefficient_a*QP);
+
+						quadrature_pb.SetXCoord(0.);
+						quadrature_pb.SetXCoord(0.);
+						quadrature_pb.SetXCoord(0.);
+
+						Point <dim> dist_vec;
+						double distance=0.;
+						double weighted_energy=0.;
+
+						dist_vec=quadrature_pa-quadrature_pb
+								             +atoma_mean_position-atomb_mean_position;
+
+						distance=dist_vec.PointNorm();
+						weighted_energy=LennrdJonesPotential(sigma, epsilon, distance)*weight;
+
+						LJ_potential=LJ_potential+weighted_energy;
+
+						quadrature_pa.SetXCoord(0.);
+						quadrature_pa.SetXCoord(0.);
+						quadrature_pa.SetXCoord(-coefficient_a*QP);
+
+						quadrature_pb.SetXCoord(0.);
+						quadrature_pb.SetXCoord(0.);
+						quadrature_pb.SetXCoord(0.);
+
+						dist_vec(0.,0.,0.);
+
+						dist_vec=quadrature_pa-quadrature_pb
+								             +atoma_mean_position-atomb_mean_position;
+
+						distance=dist_vec.PointNorm();
+						weighted_energy=LennrdJonesPotential(sigma, epsilon, distance)*weight;
+						LJ_potential=LJ_potential+weighted_energy;
+
+					}
+
+
+
+				}
+
+
+				if (n>4)
+				{
+
+					if (n==4)
+					{
+						quadrature_pa.SetXCoord(0.);
+						quadrature_pa.SetXCoord(0.);
+						quadrature_pa.SetXCoord(0.);
+
+						quadrature_pb.SetXCoord(coefficient_b*QP);
+						quadrature_pb.SetXCoord(0.);
+						quadrature_pb.SetXCoord(0.);
+
+						Point <dim> dist_vec;
+						double distance=0.;
+						double weighted_energy=0.;
+
+						dist_vec=quadrature_pa-quadrature_pb
+								             +atoma_mean_position-atomb_mean_position;
+
+						distance=dist_vec.PointNorm();
+						weighted_energy=LennrdJonesPotential(sigma, epsilon, distance)*weight;
+						LJ_potential=LJ_potential+weighted_energy;
+
+						quadrature_pa.SetXCoord(0.);
+						quadrature_pa.SetXCoord(0.);
+						quadrature_pa.SetXCoord(0.);
+
+						quadrature_pb.SetXCoord(-coefficient_b*QP);
+						quadrature_pb.SetXCoord(0.);
+						quadrature_pb.SetXCoord(0.);
+
+						dist_vec(0,0,0);
+
+						dist_vec=quadrature_pa-quadrature_pb
+								             +atoma_mean_position-atomb_mean_position;
+
+						distance=dist_vec.PointNorm();
+						weighted_energy=LennrdJonesPotential(sigma, epsilon, distance)*weight;
+						LJ_potential=LJ_potential+weighted_energy;
+
+					}
+
+					if (n==5)
+					{
+
+						quadrature_pa.SetXCoord(0.);
+						quadrature_pa.SetXCoord(0.0);
+						quadrature_pa.SetXCoord(0.);
+
+						quadrature_pb.SetXCoord(0.);
+						quadrature_pb.SetXCoord(-coefficient_b*QP);
+						quadrature_pb.SetXCoord(0.);
+
+						Point <dim> dist_vec;
+						double distance=0.;
+						double weighted_energy=0.;
+
+						dist_vec=quadrature_pa-quadrature_pb
+								             +atoma_mean_position-atomb_mean_position;
+
+						distance=dist_vec.PointNorm();
+						weighted_energy=LennrdJonesPotential(sigma, epsilon, distance)*weight;
+
+						LJ_potential=LJ_potential+weighted_energy;
+
+						quadrature_pa.SetXCoord(0.);
+						quadrature_pa.SetXCoord(0.);
+						quadrature_pa.SetXCoord(0.);
+
+						quadrature_pb.SetXCoord(0.);
+						quadrature_pb.SetXCoord(-coefficient_b*QP);
+						quadrature_pb.SetXCoord(0.);
+
+						dist_vec(0,0,0);
+
+						dist_vec=quadrature_pa-quadrature_pb
+								             +atoma_mean_position-atomb_mean_position;
+
+						distance=dist_vec.PointNorm();
+						weighted_energy=LennrdJonesPotential(sigma, epsilon, distance)*weight;
+
+						LJ_potential=LJ_potential+weighted_energy;
+
+					}
+
+					if (n==6)
+					{
+						quadrature_pa.SetXCoord(0.);
+						quadrature_pa.SetXCoord(0.);
+						quadrature_pa.SetXCoord(0.);
+
+						quadrature_pb.SetXCoord(0.);
+						quadrature_pb.SetXCoord(0.);
+						quadrature_pb.SetXCoord(coefficient_b*QP);
+
+						Point <dim> dist_vec;
+						double distance=0;
+						double weighted_energy=0;
+
+						dist_vec=quadrature_pa-quadrature_pb
+								             +atoma_mean_position-atomb_mean_position;
+
+						distance=dist_vec.PointNorm();
+						weighted_energy=LennrdJonesPotential(sigma, epsilon, distance)*weight;
+						LJ_potential=LJ_potential+weighted_energy;
+
+						quadrature_pa.SetXCoord(0.);
+						quadrature_pa.SetXCoord(0.);
+						quadrature_pa.SetXCoord(0.);
+
+						quadrature_pb.SetXCoord(0.);
+						quadrature_pb.SetXCoord(0.);
+						quadrature_pb.SetXCoord(-coefficient_b*QP);
+
+						dist_vec(0,0,0);
+
+						dist_vec=quadrature_pa-quadrature_pb
+								             +atoma_mean_position-atomb_mean_position;
+
+
+
+						distance=dist_vec.PointNorm();
+						weighted_energy=LennrdJonesPotential(sigma, epsilon, distance)*weight;
+						LJ_potential=LJ_potential+weighted_energy;
+
+					}
+
+
+
+				}
+
+
+			}
+
+
+
+
+		}
+
+	}
+
+}
+
+template <int dim>
+double Energy <dim>::internalEnergyLJ(vector < Atom <dim>* > atoms, double temperature,
+		                              double boltzman_const, double planck_const,
+									  double sigma, double epsilon)
+{
+
+	typedef typename vector < Atom <dim>* > :: iterator At;
+
+	int num_atoms=atoms.size();
+	double internal_energy_term1=0.;
+
+	for (At atom=atoms.begin(); atom < atoms.end(); ++atom)
+	{
+
+		double frequency=(*atom)->getFrequency();
+		double entropy=(*atom)->getEntropy();
+
+		(*atom)->setTemperature(temperature);
+
+		double internal_energy_atoma_term1=planck_const*frequency*
+										   exp((entropy/(3*boltzman_const))-(1.333333333)
+												+(0.33333333)*log(num_atoms));
+
+		internal_energy_term1=internal_energy_term1+1.5*internal_energy_atoma_term1;
+
+		double coefficient=pow((1/sqrt(M_PI)),6);
+
+
+
+	}
+
+}
 
 
 
