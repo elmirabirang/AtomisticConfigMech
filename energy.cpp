@@ -12,7 +12,7 @@
 #include <cmath>
 #include <vector>
 #include <iostream>
-#include <nlopt.hpp>
+//#include <nlopt.hpp>
 
 
 using namespace std;

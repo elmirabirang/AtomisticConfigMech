@@ -37,10 +37,10 @@
 #include <math.h>
 #include <sstream>
 
-#include <eigen3/Eigen/Core>
+//#include <eigen3/Eigen/Core>
 #include "ceres/ceres.h"
 #include "glog/logging.h"
-#include "gflags/gflags.h"
+//#include "gflags/gflags.h"
 
 #include "modification_interaction_list_3d.cpp"
 
@@ -198,7 +198,7 @@ int main ()
 {
 
 	vector < Atom <3>* > unrelax_atoms;
-	unrelax_atoms=UnrelaxedConfigGenerator <3> (20, 9, 39, 3.615, 3);
+	unrelax_atoms=UnrelaxedConfigGenerator <3> (20, 9, 39, 3.615, 3, "Cu");
 
 	Boundary <3> boundary_bottom;
 	Boundary <3> boundary_top;
@@ -375,15 +375,15 @@ int main ()
 
 	cout << "number of optimized atoms: " << num_optimized_atoms << endl;
 
-    string path2="/calculate/elmira/Implementations/PyQC_C++/pyQC _C++ version/tests/results/dim3/material/screening/irreversible_copper/dump.cracktip";
+    string path2="irreversible_copper/dump.cracktip";
     ofstream ffile;
 	ffile.open(path2.c_str());
 
-    string path3="/calculate/elmira/Implementations/PyQC_C++/pyQC _C++ version/tests/results/dim3/material/screening/irreversible_copper/dump.totalenergy";
+    string path3="irreversible_copper/dump.totalenergy";
     ofstream Efile;
 	Efile.open(path3.c_str());
 
-    string path4="/calculate/elmira/Implementations/PyQC_C++/pyQC _C++ version/tests/results/dim3/material/screening/irreversible_copper/dump.reactionforce";
+    string path4="irreversible_copper/dump.reactionforce";
     ofstream EFfile;
 	EFfile.open(path4.c_str());
 
@@ -430,9 +430,9 @@ int main ()
         out_string=ss.str();
 
 
-        string path="/calculate/elmira/Implementations/PyQC_C++/pyQC _C++ version/tests/results/dim3/material/screening/irreversible_copper/dump.crack";
-        string path1="/calculate/elmira/Implementations/PyQC_C++/pyQC _C++ version/tests/results/dim3/spatial/screening/irreversible_copper/dump.crackspatial" ;
-        string path5="/calculate/elmira/Implementations/PyQC_C++/pyQC _C++ version/tests/results/dim3/material/screening/irreversible_copper/dump.temporalmaterial";
+        string path="irreversible_copper/dump.crack";
+        string path1="irreversible_copper/dump.crackspatial" ;
+        string path5="irreversible_copper/dump.temporalmaterial";
 
 
         string file_name=path+out_string;

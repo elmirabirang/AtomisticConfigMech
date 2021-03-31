@@ -32,10 +32,10 @@
 #include <math.h>
 #include <sstream>
 
-#include <eigen3/Eigen/Core>
+//#include <eigen3/Eigen/Core>
 #include "ceres/ceres.h"
 #include "glog/logging.h"
-#include "gflags/gflags.h"
+//#include "gflags/gflags.h"
 
 #include "config_force_criterion_lj.cpp"
 #include "atom_stress_2d.cpp"

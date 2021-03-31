@@ -88,6 +88,14 @@ public:
 									  double mu, double eta_AlphaBetaGamma
 						              ,double cosine_teta0, double a_AlphaBeta, double a_AlphaGamma);
 
+    double LennrdJonesPotential(double sigma, double epsilon, double distance_ab);
+
+    double phaseAverageLJ(vector <Atom <dim>*> atoms, double sigma, double epsilon,
+                                    double boltzman_const, double plancks_const, int num_quad_points);
+
+    double internalEnergyLJ(vector < Atom <dim>* > atoms, double temperature,
+                                      double boltzman_const, double planck_const,
+                                      double sigma, double epsilon);
 private:
 
 	Atom <dim> atomi;

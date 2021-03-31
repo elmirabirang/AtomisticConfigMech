@@ -51,10 +51,10 @@
 #include <list>
 #include <algorithm>
 
-#include <eigen3/Eigen/Core>
+//#include <eigen3/Eigen/Core>
 #include "ceres/ceres.h"
 #include "glog/logging.h"
-#include "gflags/gflags.h"
+//#include "gflags/gflags.h"
 
 
 class MolecularStatic : public ceres::FirstOrderFunction
