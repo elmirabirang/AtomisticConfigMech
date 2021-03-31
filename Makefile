@@ -39,7 +39,7 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /usr/bin/cmake
+CMAKE_COMMAND = cmake
 
 # The command to remove a file.
 RM = /usr/bin/cmake -E remove -f
