@@ -77,17 +77,23 @@ set(HEADER_FILENAMES
 
 PREPEND(HEADER_FILES "include" ${HEADER_FILENAMES})
 
+# Core and Kernel files
+add_library(core OBJECT ${CORE_CPP_FILES})
+add_library(kernels OBJECT ${KERNELS_CPP_FILES})
+target_include_directories(core PUBLIC "include")
+target_include_directories(kernels PUBLIC "include")
+
 # 3D Energy Release (EAM)
-add_executable(engrelease3d src/test/test_eam_cu.cpp ${CORE_CPP_FILES} ${KERNELS_CPP_FILES} ${HEADER_FILES})
+add_executable(engrelease3d src/test/test_eam_cu.cpp $<TARGET_OBJECTS:core> $<TARGET_OBJECTS:kernels> ${HEADER_FILES})
 target_include_directories(engrelease3d PUBLIC "include")
 target_link_libraries(engrelease3d ${CERES_LIBRARIES})
 
 # 2D Energy Release (LJ)
-add_executable(eng_release2d src/test/energy_release_2d.cpp ${CORE_CPP_FILES} ${KERNELS_CPP_FILES} ${HEADER_FILES})
+add_executable(eng_release2d src/test/energy_release_2d.cpp $<TARGET_OBJECTS:core> $<TARGET_OBJECTS:kernels> ${HEADER_FILES})
 target_include_directories(eng_release2d PUBLIC "include")
 target_link_libraries(eng_release2d ${CERES_LIBRARIES})
 
 # Silicon (Stillinger-Weber)
-add_executable(silicon src/test/test_silicon.cpp ${CORE_CPP_FILES} ${KERNELS_CPP_FILES} ${HEADER_FILES})
+add_executable(silicon src/test/test_silicon.cpp $<TARGET_OBJECTS:core> $<TARGET_OBJECTS:kernels> ${HEADER_FILES})
 target_include_directories(silicon PUBLIC "include")
 target_link_libraries(silicon ${CERES_LIBRARIES})
