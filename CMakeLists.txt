@@ -13,7 +13,7 @@ ENDFUNCTION(PREPEND)
 
 set(CORE_CPP_FILENAMES
     assign_region.cpp
-    atom.cpp
+    #atom.cpp
     atom_stress_2d.cpp
     atoms_in_cell.cpp
     bond.cpp
@@ -29,7 +29,7 @@ set(CORE_CPP_FILENAMES
     modification_interaction_list_3d.cpp
     neighbors.cpp
     neighbors_cell_based.cpp
-    point.cpp
+    #point.cpp
     read_dump_file.cpp
     subcell.cpp
     third_order_tensor.cpp
@@ -84,16 +84,16 @@ target_include_directories(core PUBLIC "include")
 target_include_directories(kernels PUBLIC "include")
 
 # 3D Energy Release (EAM)
-add_executable(engrelease3d src/test/test_eam_cu.cpp $<TARGET_OBJECTS:core> $<TARGET_OBJECTS:kernels> ${HEADER_FILES})
+add_executable(engrelease3d src/test/test_eam_cu.cpp $<TARGET_OBJECTS:core> $<TARGET_OBJECTS:kernels>)
 target_include_directories(engrelease3d PUBLIC "include")
 target_link_libraries(engrelease3d ${CERES_LIBRARIES})
 
 # 2D Energy Release (LJ)
-add_executable(eng_release2d src/test/energy_release_2d.cpp $<TARGET_OBJECTS:core> $<TARGET_OBJECTS:kernels> ${HEADER_FILES})
+add_executable(eng_release2d src/test/energy_release_2d.cpp $<TARGET_OBJECTS:core> $<TARGET_OBJECTS:kernels>)
 target_include_directories(eng_release2d PUBLIC "include")
 target_link_libraries(eng_release2d ${CERES_LIBRARIES})
 
 # Silicon (Stillinger-Weber)
-add_executable(silicon src/test/test_silicon.cpp $<TARGET_OBJECTS:core> $<TARGET_OBJECTS:kernels> ${HEADER_FILES})
+add_executable(silicon src/test/test_silicon.cpp $<TARGET_OBJECTS:core> $<TARGET_OBJECTS:kernels>)
 target_include_directories(silicon PUBLIC "include")
 target_link_libraries(silicon ${CERES_LIBRARIES})

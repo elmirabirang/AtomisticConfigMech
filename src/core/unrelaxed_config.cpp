@@ -23,12 +23,6 @@
 #include <fstream>
 #include <iomanip>
 
-/*
-#include "neighbors.cpp"
-#include "atom.cpp"
-#include "point.cpp"
-*/
-
 using namespace std;
 
 template <int dim>

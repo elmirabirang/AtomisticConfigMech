@@ -19,65 +19,55 @@ using namespace std;
 template <int dim>
 class Atom {
 
- public:
+public:
 
-   Atom();
-   ~Atom();
-   Atom(Point <dim>, Point <dim>, int ID);
+    Atom() {}
+    ~Atom() {}
+    Atom(Point<dim> material_pos, Point<dim> current_pos, int id) :
+        material_position(material_pos),
+        spatial_position(current_pos),
+        ID(id) {}
 
-   void SetMaterialPosition(Point <dim> reference_position);
-   Point <dim> GetMaterialPosition();
+    void SetMaterialPosition(Point<dim> position) { this->material_position = position; }
+    Point <dim> GetMaterialPosition() { return this->material_position; }
+    void SetSpatialPosition(Point<dim> position) { this->spatial_position = position; }
+    Point <dim> GetSpatialPosition() { return this->spatial_position; }
+    void SetInitialPosition(Point<dim> position) { this->initial_position = position; }
+    Point <dim> GetInitialPosition() { return this->initial_position; }
+    void setTemperature(double temperature) { this->temperature = temperature; }
+    double getTemperature() { return this->temperature; }
+    void setFrequency(double temperature) { this->frequency = frequency; }
+    double getFrequency() { return this->frequency; }
+    void setEntropy(double temperature) { this->entropy = entropy; }
+    double getEntropy() { return this->entropy; }
 
-   void SetSpatialPosition(Point <dim> current_position);
-   Point <dim> GetSpatialPosition();
+    void SetID(int id) { this->ID = id; }
+    int GetID() { return this->ID; }
 
-   void SetInitialPosition(Point <dim> unrelaxed_position);
-   Point <dim> GetInitialPosition();
+    //This list of neighbors to calculate total potential energy of the system.
+    vector<Atom<dim> *> Neighbor() { return this->atom_neighbor; }
+    //The list of neighbors to calculate ResultantBondVec and ResultantBondVec_Spatial
+    vector<Atom<dim> *> BondNeighbor() { return this->bond_neighbor; }
+    void SetNeighbors(vector<Atom<dim> *> neighbors) { this->atom_neighbor = neighbors; }
+    void SetBondNeighbors(vector<Atom<dim> *> &bond_neighbors) { this->bond_neighbor = bond_neighbors; }
 
-   void setTemperature(double temperature) { this->temperature = temperature; }
-   double getTemperature() { return this->temperature; }
+    void SetAtomRegion(int bID) { this->boundary_id = bID; }
+    int GetAtomRegion() { return this->boundary_id; }
+    void SetForce(Point<dim> force) { this->force = force; }
+    Point<dim> GetForce() { return this->force; }
+    void  SetCellID(int cell_id) { this->Cell_ID = cell_id; }
+    int GetCellID() { return this->Cell_ID; }
+    void SetConfigForce(Point<dim> force) { this->config_force = force; }
+    Point <dim> GetConfigForce() { return this->config_force; }
+    void SetDeformForce(Point<dim> force) { this->deform_force = force; }
+    Point <dim> GetDeformForce() { return this->deform_force; }
+    void setAtomZone(int zone) { this->zone = zone; }
+    int getAtomZone() { return this->zone; }
+    void setAtomicStress(vector<double> stress) { this->atomic_stress = stress; }
+    vector<double> getAtomicStress() { return this->atomic_stress; }
 
-   void setFrequency(double temperature) { this->frequency = frequency; }
-   double getFrequency() { return this->frequency; }
-
-   void setEntropy(double temperature) { this->entropy = entropy; }
-   double getEntropy() { return this->entropy; }
-
-   // TODO: Properly define this!
-   Point<dim> getSpatialMeanPosition() { return this->spatial_position; }
-
-   void SetID(int id);
-   int GetID();
-
-   //This list of neighbors to calculate total potential energy of the system.
-   vector < Atom <dim>* > Neighbor();
-   //The list of neighbors to calculate ResultantBondVec and ResultantBondVec_Spatial
-   vector < Atom <dim>* > BondNeighbor();
-   
-   void SetNeighbors(vector < Atom <dim>* > neighbors);
-   void SetBondNeighbors(vector < Atom <dim>* > &bond_neighbors );
-
-   void SetAtomRegion(int bID);
-   int GetAtomRegion();
-
-   void SetForce(Point <dim> pair_force);
-   Point <dim> GetForce();
-
-   void  SetCellID(int cell_id);
-   int GetCellID();
-
-   Point <dim> GetConfigForce();
-   void SetConfigForce(Point <dim> atom_config_force);
-
-   Point <dim> GetDeformForce();
-   void SetDeformForce(Point <dim> atom_deform_force);
-
-   void setAtomZone(int zone);
-   int getAtomZone();
-
-   vector <double> getAtomicStress();
-   void setAtomicStress(vector <double> atomicStress);
-
+    // TODO: Properly define this!
+    Point<dim> getSpatialMeanPosition() { return this->spatial_position; }
 
  private:
 
@@ -101,9 +91,9 @@ class Atom {
    Point <dim> config_force;
    Point <dim> deform_force;
 
-   int atomZone;
+   int zone;
 
-   vector <double> AtomicStress;
+   vector <double> atomic_stress;
 
 };
 

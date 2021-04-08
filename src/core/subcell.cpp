@@ -10,12 +10,8 @@
  */
 
 #include "subcell.h"
-
 #include "point.h"
-#include "point.cpp"
-
 #include "atom.h"
-#include "atom.cpp"
 
 using namespace std;
 
