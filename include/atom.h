@@ -16,11 +16,57 @@
 
 using namespace std;
 
-template <int dim>
-class Atom {
+#define LOOP_OVER_ATOMS(it, atoms, omp, CODE) \
+    { \
+        __pragma(omp) \
+        for(auto it = atoms.begin(); atom_i != atoms.end(); ++atom_i) { \
+            CODE \
+    } }
 
+#define LOOP_OVER_ATOM_NEIGHBORS(it, atom, CODE) \
+    { \
+        auto neighbors = atom.Neighbor(); \
+        for(auto it = neighbors.begin(); it != neighbors.end(); ++it) { \
+            CODE \
+        } \
+        auto bond_neighbors = atom.BondNeighbor(); \
+        for(auto it = bond_neighbors.begin(); it != bond_neighbors.end(); ++it) { \
+            CODE \
+        } \
+    }
+
+#define LOOP_OVER_ATOM_NEIGHBORS_3BODY(nb1, nb2, atom, CODE) \
+    { \
+        auto neighbors = atom.Neighbor(); \
+        auto bond_neighbors = atom.BondNeighbor(); \
+        for(auto it1 = neighbors.begin(); it1 != neighbors.end(); ++it1) { \
+            auto nb1 = *it1; \
+            for(auto it2 = neighbors.begin(); it2 != neighbors.end(); ++it2) {\
+                auto nb2 = *it2; \
+                if(nb1->GetID() < nb2->GetID()) { \
+                    CODE \
+                } \
+            } \
+            for(auto it2 = bond_neighbors.begin(); it2 != bond_neighbors.end(); ++it2) {\
+                auto nb2 = *it2; \
+                if(nb1->GetID() < nb2->GetID()) { \
+                    CODE \
+                } \
+            } \
+        } \
+        for(auto it1 = bond_neighbors.begin(); it1 != bond_neighbors.end(); ++it1) { \
+            auto nb1 = *it1; \
+            for(auto it2 = bond_neighbors.begin(); it2 != bond_neighbors.end(); ++it2) {\
+                auto nb2 = *it2; \
+                if(nb1->GetID() < nb2->GetID()) { \
+                    CODE \
+                } \
+            } \
+        } \
+    }
+
+template<int dim> class Atom {
 public:
-
     Atom() {}
     ~Atom() {}
     Atom(Point<dim> material_pos, Point<dim> current_pos, int id) :
@@ -69,31 +115,27 @@ public:
     // TODO: Properly define this!
     Point<dim> getSpatialMeanPosition() { return this->spatial_position; }
 
- private:
-
-   Point <dim> material_position;
-   Point <dim> spatial_position;
-   Point <dim> initial_position;
+private:
+   Point<dim> material_position;
+   Point<dim> spatial_position;
+   Point<dim> initial_position;
 
    int ID;
    int Cell_ID;
    double cutRadius;
    int boundary_id;
-
    double temperature;
    double frequency;
    double entropy;
 
-   vector < Atom <dim>* > atom_neighbor;
-   vector < Atom <dim>* > bond_neighbor;
+   vector<Atom<dim> *> atom_neighbor;
+   vector<Atom<dim> *> bond_neighbor;
 
-   Point <dim> force;
-   Point <dim> config_force;
-   Point <dim> deform_force;
+   Point<dim> force;
+   Point<dim> config_force;
+   Point<dim> deform_force;
 
    int zone;
-
-   vector <double> atomic_stress;
-
+   vector<double> atomic_stress;
 };
 
