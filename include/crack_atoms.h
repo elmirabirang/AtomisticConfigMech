@@ -12,30 +12,20 @@
 
 using namespace std;
 
-template <int dim>
-class CrackAtom {
-
+template<int dim> class CrackAtom {
 public:
-
 	CrackAtom ();
 	~CrackAtom();
-
-	void setCrackRegion(Atom <dim>* atom);
-
-	double energyCrackAtom( CrackAtom <dim>* crack_atom, double Rcut, double sigma, double epsilon);
-
-	void setCrackBottomAtoms(vector < Atom <dim>* > bottom_atoms);
-	vector < Atom <dim>* > getCrackBottomAtoms();
-
-	void setCrackTopAtoms(vector < Atom <dim>* > top_atoms);
-	vector < Atom <dim>* > getCrackTopAtoms();
-
+	void setCrackRegion(int i);
+	double energyCrackAtom(CrackAtom<dim> *crack_atom, double Rcut, double sigma, double epsilon);
+	void setCrackBottomAtoms(vector<int> bottom_atoms);
+	vector<int> getCrackBottomAtoms();
+	void setCrackTopAtoms(vector<int> top_atoms);
+	vector<int> getCrackTopAtoms();
 
 private:
-
-	CrackAtom <dim>* brittle_crack_atom;
-	vector < Atom <dim>* > crack_bottom_atoms;
-	vector < Atom <dim>* > crack_top_atoms;
+	CrackAtom<dim> *brittle_crack_atom;
+	vector<int> crack_bottom_atoms;
+	vector<int> crack_top_atoms;
 	double cut_radius;
-
 };

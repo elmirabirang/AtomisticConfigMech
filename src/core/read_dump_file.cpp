@@ -19,48 +19,28 @@
 
 //Read data file
 
-std::vector < Atom <3>* > ReadDumpFile()
-{
+Atoms<3> *ReadDumpFile() {
+    std::ifstream infile;
+    infile.open("test_dump.txt");
+    std::string line;
+    int lines_read = 0;
+    int line_number = 9;
+    Atoms<3> *atoms = new Atoms<3>(1024);
 
-	std::ifstream infile;
-	infile.open("test_dump.txt");
-	std::string line;
-	int lines_read=0;
-	int line_number=9;
+    while (std::getline(infile,line)) {
+        lines_read++;
 
-	vector < Atom <3>* > atoms;
+        if (lines_read > line_number) {
+            int type, id;
+            double x, y, z;
+            std::istringstream iss(line);
+            iss >> id >> type >> x >> y >> z;
 
-	while (std::getline(infile,line))
-	{
-
-	   lines_read++;
-
-	   if (lines_read > line_number)
-	   {
-
-		   int type=0,id=0;
-		   double x=0.,y=0.,z=0.;
-
-		   std::istringstream iss(line);
-		   iss>> id >> type >> x >> y >> z;
-
-		   Point <3> *spatial_position=new Point <3>;
-		   Atom <3> *atom=new Atom <3>;
-
-		   spatial_position->SetXCoord(x);
-		   spatial_position->SetYCoord(y);
-		   spatial_position->SetZCoord(z);
-
-		   atom->SetID(id);
-		   atom->SetSpatialPosition(*spatial_position);
-		   atom->SetAtomRegion(type);
-
-		   atoms.push_back(atom);
-
-		}
-
+            int i = atoms->addAtom();
+            atoms->setSpatialPosition(i, Point<3>(x, y, z));
+            atoms->setRegion(i, type);
+        }
     }
 
-	return atoms;
-
+    return atoms;
 }

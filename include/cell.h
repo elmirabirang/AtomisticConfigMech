@@ -11,48 +11,37 @@
 #pragma once
 
 #include <vector>
+//---
+#include "atom.h"
 #include "point.h"
 #include "subcell.h"
-#include "atom.h"
 
 using namespace std;
 
-template <int dim>
-class Cell{
-
+template<int dim> class Cell {
 public:
 
 	Cell();
 	~Cell();
-
 	int GetCellID();
 	void SetCellID(int id);
-
 	int GetCellIndex();
 	void SetCellIndex(int index);
-
-	vector < Cell <dim>* > GetCellNeighbors();
-	void SetCellNeighbors(vector < Cell <dim>* > neighbors);
-
-	vector < Atom <dim>* > GetCellAtoms();
-	void AtomsInCell (vector < Atom <dim>* > cell_atoms);
-
+	vector<Cell<dim> *> GetCellNeighbors();
+	void SetCellNeighbors(vector<Cell<dim> *> neighbors);
+	vector<int> GetCellAtoms();
+	void AtomsInCell(vector<int> cell_atoms);
 	void SetOrigin(Point <dim> Celorigin );
 	Point <dim> GetOrigin();
-
 	void SetTopRight(Point <dim> CelTR );
 	Point <dim> GetTopRight();
 
-
-
-
 private:
 
-	Point <dim> cell_origin;
-	Point <dim> cell_TR;
+	Point<dim> cell_origin;
+	Point<dim> cell_TR;
 	int cell_id;
 	int cell_index;
-	vector < Atom <dim>* > atoms_in_cell ;
-	vector < Cell <dim>* > cell_neighbors;
-
+	vector<int> atoms_in_cell;
+	vector<Cell<dim> *> cell_neighbors;
 };

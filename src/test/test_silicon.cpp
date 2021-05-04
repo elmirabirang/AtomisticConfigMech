@@ -70,7 +70,7 @@ class MolecularStatic : public ceres::FirstOrderFunction
 
 private:
 
-	const vector < Atom <3>* > Atoms;
+	Atoms<3> *atoms;
 
     double sigma_AlphaBeta, sigma_AlphaGamma,
 	       epsilon_AlphaBetaGamma,Gamma, lambda_AlphaBetaGamma
@@ -82,151 +82,87 @@ private:
 public:
 
 
-    MolecularStatic(const vector < Atom <3>* > atoms, double sigma_AlphaBeta0,double sigma_AlphaGamma0,double epsilon_AlphaBetaGamma0,
-    		                                          double Gamma0, double lambda_AlphaBetaGamma0
- 	                                                , double cosine_teta0_0, double a_AlphaBeta0, double a_AlphaGamma0,
-													  double A_AlphaBeta0, double B_AlphaBeta0, double p_AlphaBeta0, double q_AlphaBeta0, int dof0):
+    MolecularStatic(Atoms<3> *atoms, double sigma_AlphaBeta0,double sigma_AlphaGamma0, double epsilon_AlphaBetaGamma0,
+    		                         double Gamma0, double lambda_AlphaBetaGamma0, double cosine_teta0_0,
+                                     double a_AlphaBeta0, double a_AlphaGamma0, double A_AlphaBeta0, double B_AlphaBeta0,
+                                     double p_AlphaBeta0, double q_AlphaBeta0, int dof0) :
+    	atoms(atoms), sigma_AlphaBeta(sigma_AlphaBeta0), sigma_AlphaGamma(sigma_AlphaGamma0),
+	    epsilon_AlphaBetaGamma(epsilon_AlphaBetaGamma0),Gamma(Gamma0), lambda_AlphaBetaGamma(lambda_AlphaBetaGamma0),
+        cosine_teta0(cosine_teta0_0), a_AlphaBeta(a_AlphaBeta0), a_AlphaGamma(a_AlphaGamma0),
+        A_AlphaBeta(A_AlphaBeta0), B_AlphaBeta(B_AlphaBeta0), p_AlphaBeta(p_AlphaBeta0), q_AlphaBeta(q_AlphaBeta0), dof(dof0){}
 
-    	                                      Atoms(atoms), sigma_AlphaBeta(sigma_AlphaBeta0), sigma_AlphaGamma(sigma_AlphaGamma0),
-				                              epsilon_AlphaBetaGamma(epsilon_AlphaBetaGamma0),Gamma(Gamma0), lambda_AlphaBetaGamma(lambda_AlphaBetaGamma0)
-			                                  , cosine_teta0(cosine_teta0_0), a_AlphaBeta(a_AlphaBeta0), a_AlphaGamma(a_AlphaGamma0),
-			                                  A_AlphaBeta(A_AlphaBeta0), B_AlphaBeta(B_AlphaBeta0), p_AlphaBeta(p_AlphaBeta0), q_AlphaBeta(q_AlphaBeta0), dof(dof0){}
-
-    typedef typename vector < Atom <3>* >::const_iterator At;
-
-
-	virtual bool Evaluate (const double* parameters, double* cost, double* gradient) const
-	{
-
-	    Energy <3> energy;
-	    Force <3> force;
+	virtual bool Evaluate (const double* parameters, double* cost, double* gradient) const {
+	    Energy<3> energy(atoms);
+	    Force<3> force(atoms, 0.0, 0.0);
 
 	    int iter=0;
 
-	    for (At atom=Atoms.begin(); atom!=Atoms.end(); ++atom)
-	    {
-
-	    	int atom_region=(*atom)->GetAtomRegion();
-	    	if( atom_region!=1 && atom_region!=2 && atom_region!=3)
-
-	    	{
-
+        LOOP_OVER_ATOMS(atoms, i,
+	    	int atom_region = atoms->getRegion(i);
+	    	if( atom_region!=1 && atom_region!=2 && atom_region!=3) {
         		Point <3> spatial_position_3d(0.,0.,0.);
-
         		spatial_position_3d.SetXCoord(parameters[iter]);
         		spatial_position_3d.SetYCoord(parameters[iter+1]);
         		spatial_position_3d.SetZCoord(parameters[iter+2]);
-
-	        	(*atom)->SetSpatialPosition(spatial_position_3d);
-
+                atoms->setSpatialPosition(i, spatial_position_3d);
 	        	iter+=3;
-
 	    	}
+	    )
 
-	    }
-
-		for (At atom=Atoms.begin(); atom!=Atoms.end(); ++atom)
-		{
-
-
-			 force.ResultantSWThreeBodyForce(*atom,sigma_AlphaBeta, sigma_AlphaGamma, epsilon_AlphaBetaGamma,
-						                           Gamma, lambda_AlphaBetaGamma
-					                               ,cosine_teta0, a_AlphaBeta, a_AlphaGamma);
-
-
-		}
-
-	    typedef typename vector < Atom <3>* >::const_reverse_iterator A;
+        LOOP_OVER_ATOMS(atoms, i,
+			 force.ResultantSWThreeBodyForce(i, sigma_AlphaBeta, sigma_AlphaGamma, epsilon_AlphaBetaGamma, Gamma,
+                                             lambda_AlphaBetaGamma, cosine_teta0, a_AlphaBeta, a_AlphaGamma);
+		)
 
         int iter_force=0;
-        if (gradient!=NULL)
-        {
-
-        	for(At atom=Atoms.begin(); atom!=Atoms.end(); ++atom)
-        	{
-
-        		int atom_region=(*atom)->GetAtomRegion();
-        		if( atom_region!=1 && atom_region!=2 && atom_region!=3 )
-        		{
-
+        if (gradient!=NULL) {
+            LOOP_OVER_ATOMS_REVERSE(atoms, i,
+	    	    int atom_region = atoms->getRegion(i);
+        		if( atom_region!=1 && atom_region!=2 && atom_region!=3 ) {
         			Point <3> resultant_force2body(0.,0.,0.);
-
-            		resultant_force2body=force.ResultantSWTwoBodyForce(*atom,sigma_AlphaBeta, epsilon_AlphaBetaGamma,
-                                                                                 A_AlphaBeta, B_AlphaBeta, p_AlphaBeta,
-                                                                                 q_AlphaBeta, a_AlphaBeta);
-
-
-                    Point <3> atomThreeBodyForce(0.,0.,0.);
+            		resultant_force2body=force.ResultantSWTwoBodyForce(i, sigma_AlphaBeta, epsilon_AlphaBetaGamma,
+                                                                          A_AlphaBeta, B_AlphaBeta, p_AlphaBeta,
+                                                                          q_AlphaBeta, a_AlphaBeta);
 
 
-                    atomThreeBodyForce=(*atom)-> GetForce();
-
+                    Point<3> atomThreeBodyForce(0.,0.,0.);
+                    atomThreeBodyForce= atoms->getForce(i);
             		gradient[iter_force]=-resultant_force2body.GetXCoord()-atomThreeBodyForce.GetXCoord();
             		gradient[iter_force+1]=-resultant_force2body.GetYCoord()-atomThreeBodyForce.GetYCoord();
             		gradient[iter_force+2]=-resultant_force2body.GetZCoord()-atomThreeBodyForce.GetZCoord();
-
             		iter_force+=3;
-
-
-
         		}
-
-
-        	}
-
+        	)
         }
 
-		for (At atom=Atoms.begin(); atom!=Atoms.end(); ++atom)
-		{
-
-			Point <3> zero_force(0.,0.,0.);
-
-			(*atom)-> SetForce(zero_force);
-
-
-		}
+        LOOP_OVER_ATOMS(atoms, i,
+            atoms->setForce(i, Point<3>(0.0, 0.0, 0.0));
+        )
 
         double total_energy=0.;
 
-    	for(At atom=Atoms.begin(); atom!=Atoms.end(); ++atom)
-    	{
-
-    		total_energy=total_energy+energy.totalStillingerWeberEnergy(*atom, sigma_AlphaBeta,
+        LOOP_OVER_ATOMS(atoms, i,
+    		total_energy=total_energy+energy.totalStillingerWeberEnergy(i, sigma_AlphaBeta,
                                                             sigma_AlphaGamma, epsilon_AlphaBetaGamma,
 					                                        Gamma, lambda_AlphaBetaGamma,
 					                                        cosine_teta0, a_AlphaBeta, a_AlphaGamma,
 					                                        A_AlphaBeta, B_AlphaBeta, p_AlphaBeta,
 					                                        q_AlphaBeta);
+    	)
 
-    	}
-
-    	cost[0]=total_energy;
-
+    	cost[0] = total_energy;
         return true;
-
 	}
 
-	virtual int NumParameters() const
-	{
-		return{dof};
-
-	}
-
+	virtual int NumParameters() const { return{dof}; }
 };
 
-
-int main()
-{
+int main() {
     using namespace std;
-    vector < Atom <3>* > unrelax_atoms;
-    unrelax_atoms=UnrelaxedConfigGenerator <3> (1, 20, 10, 5.4310, 3, "Si");
-
-
-    typedef typename vector < Atom <3>* >::iterator At;
-    Energy <3> energy;
-    Force  <3> force;
-
-    Boundary <3> boundary_bottom;
+    Atoms<3> *atoms = UnrelaxedConfigGenerator <3> (1, 20, 10, 5.4310, 3, "Si");
+    Energy<3> energy(atoms);
+    Force<3> force(atoms, 0.0, 0.0);
+    Boundary<3> boundary_bottom;
 
     double bottom_BC_x_min=0.0;
     double bottom_BC_y_min=0.0;
@@ -296,54 +232,40 @@ int main()
     boundaries.push_back(crack_bottom);
     boundaries.push_back(crack_top);
 
-    for (At atom=unrelax_atoms.begin(); atom!=unrelax_atoms.end(); ++atom)
-    {
-        AssignRegion(*atom,boundaries);
-
-    }
-
-    vector < Atom <3>* > atoms=FindNeighbors(unrelax_atoms,2.6);
+    AssignRegion(atoms, boundaries);
+    FindNeighbors(atoms, 2.6);
 
     string path4="/calculate/elmira/atomistic_config_mech/results/dump.silicon" ;
+    writeDataFile(atoms, 1, path4);
 
-    writeDataFile (atoms, 1, path4);
+	Atoms<3> *optimized_atoms;
+    int num_optimized_atoms;
 
-	vector < Atom <3>* > optimized_atoms;
-	int i=0;
-    for (At atom=atoms.begin(); atom!=atoms.end(); ++atom)
-    {
-
-    	if ( (*atom) -> GetAtomRegion()==0 || (*atom) -> GetAtomRegion()==4 || (*atom) -> GetAtomRegion()==5 )
-    	{
-            optimized_atoms.push_back(*atom);
+    LOOP_OVER_ATOMS(atoms, i,
+        int region = atoms->getRegion(i);
+        if(region == 0 || region == 4 || region == 5) {
+            num_optimized_atoms += 3;
     	}
-
-    }
-
-    int num_optimized_atoms=optimized_atoms.size()*3;
+    )
 
     cout << "num_optimized_atoms: " << num_optimized_atoms << endl;
 
 	int iterator=0;
 	int atom_num=0;
-	double parameters [num_optimized_atoms];
-	while (iterator<num_optimized_atoms)
-	{
-
-		Point <3> optimized_atom=optimized_atoms[atom_num]->GetMaterialPosition();
-
-		double x=optimized_atom.GetXCoord();
-		double y=optimized_atom.GetYCoord();
-		double z=optimized_atom.GetZCoord();
-
-		parameters[iterator]=x;
-		parameters[iterator+1]=y;
-		parameters[iterator+2]=z;
-
-		iterator+=3;
-		atom_num+=1;
-
-	}
+	double parameters[num_optimized_atoms];
+    LOOP_OVER_ATOMS(atoms, i,
+        int region = atoms->getRegion(i);
+        if(region == 0 || region == 4 || region == 5) {
+            Point<3> optimized_atom = atoms->getMaterialPosition(i);
+            double x = optimized_atom.GetXCoord();
+            double y = optimized_atom.GetYCoord();
+            double z = optimized_atom.GetZCoord();
+            parameters[iterator] = x;
+            parameters[iterator+1] = y;
+            parameters[iterator+2] = z;
+            iterator += 3;
+        }
+    )
 
     double tot_energy=0;
     int number_load_steps=1;
@@ -396,14 +318,10 @@ int main()
 
     	if (load_step==1)
     	{
-    		for (At atom=atoms.begin(); atom!=atoms.end(); ++atom)
-    		{
-
-    			Point <3> spatialP= (*atom)->GetSpatialPosition();
-    			(*atom)->SetMaterialPosition(spatialP);
-
-    		}
-
+            LOOP_OVER_ATOMS(atoms, i,
+    			Point<3> spatialP = atoms->getSpatialPosition(i);
+    			atoms->setMaterialPosition(i, spatialP);
+    		)
     	}
 
 
@@ -413,7 +331,7 @@ int main()
 			MFile <<"ITEM: TIMESTEP" <<endl;
 			MFile << load_step <<endl;
 			MFile <<"ITEM: NUMBER OF ATOMS" << endl;
-			MFile << atoms.size() << endl;
+			MFile << atoms->getNumberOfAtoms() << endl;
 			MFile <<"ITEM: BOX BOUNDS mm mm pp"<<endl;
 			MFile << "0" << " " << "1.6" << endl;
 			MFile << "0" << " " << "1.6" << endl;
@@ -423,7 +341,7 @@ int main()
 			SFile <<"ITEM: TIMESTEP" <<endl;
 			SFile << load_step <<endl;
 			SFile <<"ITEM: NUMBER OF ATOMS" << endl;
-			SFile << atoms.size() << endl;
+			SFile << atoms->getNumberOfAtoms() << endl;
 			SFile <<"ITEM: BOX BOUNDS mm mm pp"<<endl;
 			SFile << "0" << " " << "1.6" << endl;
 			SFile << "0" << " " << "1.6" << endl;
@@ -431,11 +349,9 @@ int main()
 			SFile <<"ITEM: ATOMS id type x y z fx fy fz Kx Ky Kz" <<endl;
 
 
-			for(At atom=atoms.begin(); atom!=atoms.end(); ++atom)
-			{
-
-				Point <3> spatial_position=(*atom)->GetSpatialPosition();
-				Point <3> material_position=(*atom)->GetMaterialPosition();
+            LOOP_OVER_ATOMS(atoms, i,
+				Point<3> spatial_position=atoms->getSpatialPosition(i);
+				Point<3> material_position=atoms->getMaterialPosition(i);
 
 				double spatialp_x=spatial_position.GetXCoord();
 				double spatialp_y=spatial_position.GetYCoord();
@@ -445,32 +361,20 @@ int main()
 				double materialp_y=material_position.GetYCoord();
 				double materialp_z=material_position.GetZCoord();
 
-				Point <3> atomic_force=force.ResultantSWTwoBodyForce((*atom), 2.0951, 2.1683,
-																	 7.049556277, 0.6022245584,
-																	 4.0, 0.0, 1.8);
-
-				Point <3> atomic_config_force=force.ResultantConfigSWTwoBodyForce((*atom), 2.0951, 2.1683,
-																	        7.049556277, 0.6022245584,
-																	        4.0, 0.0, 1.8);
-
-				Point <3> atomic_force3body=force.ResultantSWThreeBodyForce((*atom),2.0951, 2.0951,
-																			 2.1683, 1.2, 21.,-0.333333,
-																			 1.8, 1.8);
+				Point<3> atomic_force=force.ResultantSWTwoBodyForce(i, 2.0951, 2.1683, 7.049556277, 0.6022245584, 4.0, 0.0, 1.8);
+				Point<3> atomic_config_force=force.ResultantConfigSWTwoBodyForce(i, 2.0951, 2.1683, 7.049556277, 0.6022245584, 4.0, 0.0, 1.8);
+				Point<3> atomic_force3body=force.ResultantSWThreeBodyForce(i,2.0951, 2.0951, 2.1683, 1.2, 21.,-0.333333, 1.8, 1.8);
 
 //				cout << "atomic_force3body: " << atomic_force3body.PointNorm() << "\n";
 
-				Point <3> atomic_config_force3body=force.ResultantConfigSWThreeBodyForce((*atom),2.0951, 2.0951,
+				Point<3> atomic_config_force3body=force.ResultantConfigSWThreeBodyForce(i,2.0951, 2.0951,
 																			              2.1683, 1.2, 21.,-0.333333,
 																			              1.8, 1.8);
 
 				double energy_atom_a=0.;
 
-				energy_atom_a=energy.totalStillingerWeberEnergy((*atom),
-																2.0951, 2.0951,
-																2.1683, 1.2, 21.,-0.33,
-																1.8, 1.8,
-																7.049556277, 0.6022245584,
-																4.0, 0.0);
+				energy_atom_a=energy.totalStillingerWeberEnergy(i, 2.0951, 2.0951, 2.1683, 1.2, 21.,-0.33, 1.8, 1.8,
+																7.049556277, 0.6022245584, 4.0, 0.0);
 
 				tot_energy+=energy_atom_a;
 
@@ -490,10 +394,10 @@ int main()
 				double atomic_config_force3body_y=atomic_config_force3body.GetYCoord();
 				double atomic_config_force3body_z=atomic_config_force3body.GetZCoord();
 
-				int atom_id=(*atom)->GetID();
+				int atom_id=i;
+                int region = atoms->getRegion(i);
 
-
-				if ((*atom)->GetAtomRegion()==0)
+				if (region==0)
 				{
 
 				SFile << atom_id << " " << "0" <<" " << spatialp_x<<" "
@@ -513,7 +417,7 @@ int main()
 					 << " " << atomic_config_force_z+atomic_config_force3body_z<<endl;
 				}
 
-				else if ((*atom)->GetAtomRegion()==1)
+				else if (region==1)
 				{
 
 				SFile << atom_id << " " << "1" <<" " << spatialp_x<<" "
@@ -533,7 +437,7 @@ int main()
 					 << " " << atomic_config_force_z+atomic_config_force3body_z<<endl;
 				}
 
-				else if ((*atom)->GetAtomRegion()==2)
+				else if (region==2)
 				{
 
 				SFile << atom_id << " " << "2" <<" " << spatialp_x<<" "
@@ -553,7 +457,7 @@ int main()
 					 << " " << atomic_config_force_z+atomic_config_force3body_z<<endl;
 				}
 
-				else if ((*atom)->GetAtomRegion()==4)
+				else if (region==4)
 				{
 
 				SFile << atom_id << " " << "4" <<" " << spatialp_x<<" "
@@ -592,8 +496,7 @@ int main()
 					 << " " << atomic_config_force_y+atomic_config_force3body_y
 					 << " " << atomic_config_force_z+atomic_config_force3body_z<<endl;
 				}
-			}
-
+			)
 		}
 
 		MFile.close();
@@ -601,11 +504,11 @@ int main()
 
 		load+=0.001;
 
-    	for (At atom=atoms.begin(); atom!=atoms.end(); ++atom)
-    	{
-    		if( (*atom)->GetAtomRegion()==2 )
+        LOOP_OVER_ATOMS(atoms, i,
+            int region = atoms->getRegion(i);
+    		if( region==2 )
     		{
-    			Point <3> Poldt = (*atom) -> GetMaterialPosition();
+    			Point <3> Poldt = atoms -> getMaterialPosition(i);
     			double Yold = Poldt.GetYCoord();
     			double Xold = Poldt.GetXCoord();
     			double Zold = Poldt.GetZCoord();
@@ -616,14 +519,14 @@ int main()
     			Pnewt.SetYCoord(Yold);
     			Pnewt.SetZCoord(Znew);
 
-    			(*atom) -> SetSpatialPosition(Pnewt);
+                atoms->setSpatialPosition(i, Pnewt);
 
     		}
 
-    		else if( (*atom)->GetAtomRegion()==1 )
+    		else if( region==1 )
     		{
 
-    			Point <3> Poldb = (*atom) -> GetMaterialPosition();
+    			Point <3> Poldb = atoms -> getMaterialPosition(i);
     			double Yold = Poldb.GetYCoord();
     			double Xold = Poldb.GetXCoord();
     			double Zold = Poldb.GetZCoord();
@@ -634,12 +537,10 @@ int main()
     			Pnewb.SetYCoord(Yold);
     			Pnewb.SetZCoord(Znew);
 
-
-    			(*atom) -> SetSpatialPosition(Pnewb);
+                atoms->setSpatialPosition(i, Pnewb);
 
     		}
-
-    	}
+    	)
 
 		ceres::GradientProblem problem (new MolecularStatic(atoms,2.0951, 2.0951,
 															2.1683, 1.2, 21.,-0.333333333,

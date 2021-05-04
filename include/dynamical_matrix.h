@@ -9,27 +9,16 @@
 
 #include "atom.h"
 #include "matrix.h"
-#include <vector>
 
-using namespace std;
+template<int dim> class DynamicalMatrix {
+public:
+    DynamicalMatrix();
+    ~DynamicalMatrix();
+    void DynamicalMatrixLJ(int i, double sigma, double epsilon);
+    SecondTensor<double> DynamicalMatrixEAM(int i, int j);
 
-template <int dim>
-class DynamicalMatrix
-{
-
-    public:
-	DynamicalMatrix();
-	~DynamicalMatrix();
-
-	void DynamicalMatrixLJ(Atom <dim>* atom, double sigma, double epsilon);
-
-	SecondTensor<double> DynamicalMatrixEAM(Atom <dim> &atoma, Atom <dim> &atomb);
-
-    private:
-
-	Atom <dim> atomi;
-	Atom <dim> atomj;
-
+private:
+    Atoms<dim> *atoms;
 };
 
 

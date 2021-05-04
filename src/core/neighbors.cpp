@@ -13,316 +13,40 @@
 #include "bond.h"
 #include "point.h"
 #include "cell.h"
+#include <iostream>
+#include <math.h>
+#include <vector>
+//---
 #include "subcell.h"
 #include "atom.h"
-#include <math.h>
 
-#include <iostream>
-#include <vector>
+// TODO: use cell lists to build neighbor lists
+template<int dim> void FindNeighbors(Atoms<dim> *atoms, double cutoff_radius) {
+    LOOP_OVER_ATOMS(atoms, i,
+		Point<dim> pos_i = atoms->getMaterialPosition(i);
+		int region_i = atoms->getRegion(i);
 
-using namespace std;
+        if(region_i != 3) {
+            LOOP_OVER_ATOMS(atoms, j,
+                int region_j = atoms->getRegion(j);
 
+                if(i < j && region_j != 3) {
+                    if((region_i == 4 && region_j == 5) || (region_i == 5 && region_j == 4)) {
+                        continue;
+                    }
 
-template <int dim>
-vector < Atom <dim>* > FindNeighbors(vector < Atom <dim>* > &unrelax_atoms, double cut_radius)
-{
-
-	Bond <dim> bond;
-
-	typedef typename vector < Atom <dim>* >:: iterator Atomi;
-	typedef typename vector < Atom <dim>* >:: iterator Atomj;
-
-	//list of neighbors to calculate pair-wise energy.
-	//list of neighbors to calculate ResultantbOndVec_Spatial & ResultantBondVec_Material
-if (dim==2){
-
-	for (Atomi atomi=unrelax_atoms.begin(); atomi!=unrelax_atoms.end(); ++atomi)
-	{
-		vector < Atom <dim>* > neighbors;
-		int atomi_id=(*atomi)->GetID();
-
-		int region=(*atomi)->GetAtomRegion();
-
-		Point <dim> materialP=(*atomi)->GetMaterialPosition();
-
-		double x_i=materialP.GetXCoord();
-		double y_i=materialP.GetYCoord();
-
-		switch (region){
-
-		case 4:{
-
-
-			for (Atomj atomj=unrelax_atoms.begin(); atomj!=unrelax_atoms.end(); ++atomj)
-
-			{
-				int atomj_id=(*atomj)->GetID();
-				int region_j=(*atomj)->GetAtomRegion();
-
-			     if (atomi_id <  atomj_id && region_j!=5 && region_j!=3)
-			     {
-
-			    	 Point <dim> neighborP=(*atomj)->GetMaterialPosition();
-			    	 double x_j=neighborP.GetXCoord();
-			    	 double y_j=neighborP.GetYCoord();
-
-				     double x_coord=x_j-x_i;
-				     double y_coord=y_j-y_i;
-
-				     double distance = sqrt((x_coord*x_coord)+(y_coord*y_coord));
-
-			    	 if (distance < cut_radius)
-
-			    	 {
-			    		 vector < Atom <dim>* > neighbors_of_atomj=(*atomj)->BondNeighbor();
-
-			    		 neighbors_of_atomj.push_back(*atomi);
-			    		 (*atomj)->SetBondNeighbors(neighbors_of_atomj);
-
-			    		 neighbors.push_back(*atomj);
-
-			    	 }
-			     }
-			}
-			break;
+                    Point<dim> pos_j = atoms->getMaterialPosition(j);
+                    Point<dim> delta = pos_i - pos_j;
+                    if(delta.norm() < cutoff_radius) {
+                        atoms->appendNeighbor(i, j);
+                        atoms->appendBondNeighbor(j, i);
+                        //neighbors.push_back(*atomj);
+                    }
+                }
+			)
 		}
-
-		case 5:{
-			for (Atomj atomj=unrelax_atoms.begin(); atomj!=unrelax_atoms.end(); ++atomj)
-
-			{
-				int atomj_id=(*atomj)->GetID();
-				int region_j=(*atomj)->GetAtomRegion();
-
-			     if (atomi_id <  atomj_id && region_j!=4 && region_j!=3 )
-			     {
-
-			    	 Point <dim> neighborP=(*atomj)->GetMaterialPosition();
-			    	 double x_j=neighborP.GetXCoord();
-			    	 double y_j=neighborP.GetYCoord();
-
-				     double x_coord=x_j-x_i;
-				     double y_coord=y_j-y_i;
-
-				     double distance = sqrt(pow(x_coord,2)+pow(y_coord,2));
-
-			    	 if (distance < cut_radius)
-
-			    	 {
-			    		 vector < Atom <dim>* > neighbors_of_atomj=(*atomj)->BondNeighbor();
-
-			    		 neighbors_of_atomj.push_back(*atomi);
-			    		 (*atomj)->SetBondNeighbors(neighbors_of_atomj);
-
-			    		 neighbors.push_back(*atomj);
-
-			    	 }
-			     }
-			}
-			break;
-
-		}
-
-
-
-		case 0:
-		case 1:
-		case 2:{
-
-			for (Atomj atomj=unrelax_atoms.begin(); atomj!=unrelax_atoms.end(); ++atomj)
-
-			{
-				 int atomj_id=(*atomj)->GetID();
-				 int region_j=(*atomj)->GetAtomRegion();
-
-			     if (atomi_id <  atomj_id && region_j!=3)
-			     {
-
-			    	 Point <dim> neighborP=(*atomj)->GetMaterialPosition();
-			    	 double x_j=neighborP.GetXCoord();
-			    	 double y_j=neighborP.GetYCoord();
-
-				     double x_coord=x_j-x_i;
-				     double y_coord=y_j-y_i;
-
-				     double distance = sqrt((x_coord*x_coord)+(y_coord*y_coord));
-
-			    	 if (distance < cut_radius)
-
-			    	 {
-			    		 vector < Atom <dim>* > neighbors_of_atomj=(*atomj)->BondNeighbor();
-
-			    		 neighbors_of_atomj.push_back(*atomi);
-			    		 (*atomj)->SetBondNeighbors(neighbors_of_atomj);
-
-			    		 neighbors.push_back(*atomj);
-
-			    	 }
-			     }
-			}
-			break;
-
-		}
-
-		}
-
-		(*atomi)->SetNeighbors(neighbors);
-
-	}
-
-	return(unrelax_atoms);
+	)
 }
 
-
-
-else{
-
-	for (Atomi atomi=unrelax_atoms.begin(); atomi!=unrelax_atoms.end(); ++atomi)
-	{
-		vector < Atom <dim>* > neighbors;
-		int atomi_id=(*atomi)->GetID();
-
-		int region=(*atomi)->GetAtomRegion();
-
-		Point <dim> materialP=(*atomi)->GetMaterialPosition();
-
-		double x_i=materialP.GetXCoord();
-		double y_i=materialP.GetYCoord();
-		double z_i=materialP.GetZCoord();
-
-		switch (region){
-
-		case 4:{
-
-
-			for (Atomj atomj=unrelax_atoms.begin(); atomj!=unrelax_atoms.end(); ++atomj)
-
-			{
-				int atomj_id=(*atomj)->GetID();
-				int region_j=(*atomj)->GetAtomRegion();
-
-			     if (atomi_id <  atomj_id && region_j!=5 && region_j!=3 )
-			     {
-
-			    	 Point <dim> neighborP=(*atomj)->GetMaterialPosition();
-
-			    	 double x_j=neighborP.GetXCoord();
-			    	 double y_j=neighborP.GetYCoord();
-			    	 double z_j=neighborP.GetZCoord();
-
-				     double x_coord=x_j-x_i;
-				     double y_coord=y_j-y_i;
-				     double z_coord=z_j-z_i;
-
-				     double distance = sqrt(pow(x_coord,2)+pow(y_coord,2)+pow(z_coord,2));
-
-			    	 if (distance < cut_radius)
-
-			    	 {
-			    		 vector < Atom <dim>* > neighbors_of_atomj=(*atomj)->BondNeighbor();
-
-			    		 neighbors_of_atomj.push_back(*atomi);
-			    		 (*atomj)->SetBondNeighbors(neighbors_of_atomj);
-
-			    		 neighbors.push_back(*atomj);
-
-			    	 }
-			     }
-			}
-			break;
-		}
-
-		case 5:{
-
-			for (Atomj atomj=unrelax_atoms.begin(); atomj!=unrelax_atoms.end(); ++atomj)
-
-			{
-				int atomj_id=(*atomj)->GetID();
-				int region_j=(*atomj)->GetAtomRegion();
-
-			     if (atomi_id <  atomj_id && region_j!=4 && region_j!=3 )
-			     {
-
-			    	 Point <dim> neighborP=(*atomj)->GetMaterialPosition();
-			    	 double x_j=neighborP.GetXCoord();
-			    	 double y_j=neighborP.GetYCoord();
-			    	 double z_j=neighborP.GetZCoord();
-
-				     double x_coord=x_j-x_i;
-				     double y_coord=y_j-y_i;
-				     double z_coord=z_j-z_i;
-
-				     double distance = sqrt((x_coord*x_coord)+(y_coord*y_coord)+(z_coord*z_coord));
-
-			    	 if (distance < cut_radius)
-
-			    	 {
-			    		 vector < Atom <dim>* > neighbors_of_atomj=(*atomj)->BondNeighbor();
-
-			    		 neighbors_of_atomj.push_back(*atomi);
-			    		 (*atomj)->SetBondNeighbors(neighbors_of_atomj);
-
-			    		 neighbors.push_back(*atomj);
-
-			    	 }
-			     }
-			}
-			break;
-
-		}
-
-		case 0:
-		case 1:
-		case 2:
-		{
-
-			for (Atomj atomj=unrelax_atoms.begin(); atomj!=unrelax_atoms.end(); ++atomj)
-
-			{
-				 int atomj_id=(*atomj)->GetID();
-				 int region_j=(*atomj)->GetAtomRegion();
-
-			     if (atomi_id <  atomj_id && region_j!=3)
-			     {
-
-			    	 Point <dim> neighborP=(*atomj)->GetMaterialPosition();
-			    	 double x_j=neighborP.GetXCoord();
-			    	 double y_j=neighborP.GetYCoord();
-			    	 double z_j=neighborP.GetZCoord();
-
-				     double x_coord=x_j-x_i;
-				     double y_coord=y_j-y_i;
-				     double z_coord=z_j-z_i;
-
-				     double distance = sqrt((x_coord*x_coord)+(y_coord*y_coord)+(z_coord*z_coord));
-
-			    	 if (distance < cut_radius)
-
-			    	 {
-			    		 vector < Atom <dim>* > neighbors_of_atomj=(*atomj)->BondNeighbor();
-
-			    		 neighbors_of_atomj.push_back(*atomi);
-			    		 (*atomj)->SetBondNeighbors(neighbors_of_atomj);
-
-			    		 neighbors.push_back(*atomj);
-
-			    	 }
-			     }
-			}
-			break;
-
-		}
-
-		}
-
-		(*atomi)->SetNeighbors(neighbors);
-
-	}
-
-	return(unrelax_atoms);
-}
-
-}
-
-template vector < Atom <2>* > FindNeighbors<2>(vector < Atom <2>* > &unrelax_atoms, double cut_radius);
-template vector < Atom <3>* > FindNeighbors<3>(vector < Atom <3>* > &unrelax_atoms, double cut_radius);
+template void FindNeighbors<2>(Atoms<2> *atoms, double cutoff_radius);
+template void FindNeighbors<3>(Atoms<3> *atoms, double cutoff_radius);

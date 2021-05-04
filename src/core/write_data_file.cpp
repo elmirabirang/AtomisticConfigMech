@@ -23,17 +23,12 @@
 
 using namespace std;
 
-template <int dim>
-void writeDataFile (vector <Atom <dim>* > atoms, int load_step, string path)
-{
-
-	Force<dim> force;
-
+template<int dim> void writeDataFile(Atoms<dim> *atoms, int load_step, string path) {
+	Force<dim> force(atoms, 0.0, 0.0);
     string out_string;
     stringstream ss;
     ss << load_step;
     out_string=ss.str();
-
     string file_name=path+out_string;
 	ofstream Tfile;
 	Tfile.open(file_name.c_str());
@@ -42,7 +37,7 @@ void writeDataFile (vector <Atom <dim>* > atoms, int load_step, string path)
 
 	Tfile << "LAMMPS Description" << endl;
 	Tfile << "\n" << endl;
-	Tfile << "     "<< atoms.size() << "  " << "atoms"<<endl;
+	Tfile << "     "<< atoms->getNumberOfAtoms() << "  " << "atoms"<<endl;
 	// In advance number of bonds is not known.
 
 	Tfile << "     "<< "7489" << "  "<< "bonds"<<endl;
@@ -61,15 +56,8 @@ void writeDataFile (vector <Atom <dim>* > atoms, int load_step, string path)
 	Tfile << "Atoms " << endl;
 	Tfile << endl;
 
-	typedef typename vector <Atom <dim>*> :: iterator At;
-
-	for (At atom=atoms.begin(); atom!=atoms.end(); ++atom)
-
-	{
-
-		int atom_id=(*atom)-> GetID();
-		Point <dim> spatial_position = (*atom)-> GetSpatialPosition();
-
+    LOOP_OVER_ATOMS(atoms, i,
+		Point<dim> spatial_position = atoms->getSpatialPosition(i);
 		double spatialp_x=spatial_position.GetXCoord();
 		double spatialp_y=spatial_position.GetYCoord();
 		double spatialp_z=spatial_position.GetZCoord();
@@ -77,35 +65,26 @@ void writeDataFile (vector <Atom <dim>* > atoms, int load_step, string path)
 		// in data file can not have an atom from type 0
 		//"Add this command when lattice structure has several regions."(*atom)->GetAtomRegion()+1
 
-		  Tfile << id << " " << "1"<< " " << "1" << " " << "1.0" << " "<< spatialp_x
+		  Tfile << i << " " << "1"<< " " << "1" << " " << "1.0" << " "<< spatialp_x
 		  << " " << setprecision(5)<< spatialp_y <<" " << spatialp_z
 		  <<endl;
-		   id+=1;
-
-	}
+	)
 
 	Tfile << endl;
 	Tfile << "Bonds" << endl;
 	Tfile << endl;
 	int count_num_neighbors=0;
 
-	for (At at=atoms.begin(); at!=atoms.end(); ++at)
-	{
-
-		vector < Atom <dim>* > neighbors= (*at)-> Neighbor();
-
-		for (At neighbor=neighbors.begin(); neighbor!=neighbors.end(); ++neighbor)
-		{
-
+    LOOP_OVER_ATOMS(atoms, i,
+        LOOP_OVER_ATOM_HALF_NEIGHBORS(atoms, i, j,
 			count_num_neighbors+=1;
-			Tfile << count_num_neighbors << " " << "1" << " " << (*at)->GetID() << " "  << (*neighbor)->GetID() << endl;
+			Tfile << count_num_neighbors << " " << "1" << " " << i << " "  << j << endl;
+        )
+    )
 
-		}
-
-	}
 	Tfile.close();
 
 }
 
-template void writeDataFile<2>(vector <Atom <2>* > atoms, int load_step, string path);
-template void writeDataFile<3>(vector <Atom <3>* > atoms, int load_step, string path);
+template void writeDataFile<2>(Atoms<2> *atoms, int load_step, string path);
+template void writeDataFile<3>(Atoms<3> *atoms, int load_step, string path);

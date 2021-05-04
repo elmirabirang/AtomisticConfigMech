@@ -1,7 +1,5 @@
-#include <vector>
+#include <string>
 //---
 #include "atom.h"
 
-using namespace std;
-
-template<int dim> void writeDataFile(vector <Atom <dim> *> atoms, int load_step, string path);
+template<int dim> void writeDataFile(Atoms<dim> *atoms, int load_step, std::string path);

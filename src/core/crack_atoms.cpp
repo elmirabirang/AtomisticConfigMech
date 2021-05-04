@@ -21,19 +21,11 @@
 
 using namespace std;
 
-template <int dim> CrackAtom <dim>::CrackAtom() {}
-template <int dim> CrackAtom <dim>::~CrackAtom() {}
-template <int dim> vector < Atom <dim>* > CrackAtom <dim>::getCrackBottomAtoms() {
-	return (crack_bottom_atoms);
-}
-
-template <int dim> void CrackAtom <dim>::setCrackBottomAtoms(vector < Atom <dim>* > bottom_atoms) {
-	this -> crack_bottom_atoms = bottom_atoms;
-}
-
-template <int dim> vector <Atom <dim>* > CrackAtom <dim>::getCrackTopAtoms() {
-   return(crack_top_atoms);
-}
+template<int dim> CrackAtom <dim>::CrackAtom() {}
+template<int dim> CrackAtom <dim>::~CrackAtom() {}
+template<int dim> vector<int> CrackAtom<dim>::getCrackBottomAtoms() { return crack_bottom_atoms; }
+template<int dim> void CrackAtom <dim>::setCrackBottomAtoms(vector<int> bottom_atoms) { this->crack_bottom_atoms = bottom_atoms; }
+template<int dim> vector<int> CrackAtom<dim>::getCrackTopAtoms() { return crack_top_atoms; }
 
 //template <int dim>
 //void CrackAtom <dim>::setCrackTopAtoms(vector <Atom <dim>* > top_atoms)
@@ -44,177 +36,56 @@ template <int dim> vector <Atom <dim>* > CrackAtom <dim>::getCrackTopAtoms() {
 //}
 
 //crackAtom <2>* crack_atom(Atom <2>* atom)
-template <int dim>
-void CrackAtom <dim>::setCrackRegion(Atom <dim>* atom)
-{
-
+template<int dim> void CrackAtom<dim>::setCrackRegion(int i) {
 //	brittle_crack_atom=this;
+	Point<dim> material_position_crack_atom = this->atoms->getMaterialPosition(i);
+	double crack_atom_y = material_position_crack_atom.GetYCoord();
+	vector<int> bottom_atoms;
+	vector<int> top_atoms;
 
-
-	vector < Atom <dim>* > crack_atom_neighbors;
-	vector < Atom <dim>* > crack_atom_bond_neighbors;
-	crack_atom_neighbors=atom->Neighbor();
-	crack_atom_bond_neighbors=atom->BondNeighbor();
-
-	vector < Atom <dim>* > bottom_atoms;
-	vector < Atom <dim>* > top_atoms;
-
-	Point <dim> material_position_crack_atom = atom->GetMaterialPosition();
-
-	double crack_atom_y=material_position_crack_atom.GetYCoord();
 	cout << "atom y: " << crack_atom_y<< endl;
 	cout << "atom x: " << material_position_crack_atom.GetXCoord() << endl;
-	cout << "size: " << crack_atom_neighbors.size() <<endl;
+	//cout << "size: " << crack_atom_neighbors.size() <<endl;
 
-	typedef typename vector < Atom <dim>* >::iterator Neigh;
+    LOOP_OVER_ATOM_NEIGHBORS(this->atoms, i, j,
+		Point<dim> material_position_neighbor = this->atoms->getMaterialPosition(j);
+		double neighbor_y = material_position_neighbor.GetYCoord();
 
-	for (Neigh neighbor=crack_atom_neighbors.begin() ; neighbor!=crack_atom_neighbors.end() ; ++neighbor)
-	{
-
-		Point <dim> material_position_neighbor=(*neighbor)-> GetMaterialPosition();
-		double neighbor_y= material_position_neighbor.GetYCoord();
-
-
-		if (neighbor_y <= crack_atom_y)
-		{
-
-			bottom_atoms.push_back(*neighbor);
+		if(neighbor_y <= crack_atom_y) {
+			bottom_atoms.push_back(j);
 			cout << "here00" <<endl;
-
-		}
-
-		else
-		{
-
-			top_atoms.push_back(*neighbor);
+		} else {
+			top_atoms.push_back(j);
 			cout << "here0" <<endl;
-
-
 		}
+	)
 
-	}
-
-	for (Neigh neighbor=crack_atom_bond_neighbors.begin() ; neighbor!=crack_atom_bond_neighbors.end() ; ++neighbor)
-	{
-
-		Point <dim> material_position_neighbor=(*neighbor)-> GetMaterialPosition();
-		double neighbor_y= material_position_neighbor.GetYCoord();
-
-
-		if (neighbor_y <= crack_atom_y)
-		{
-
-			bottom_atoms.push_back(*neighbor);
-			cout << "here11" <<endl;
-
-		}
-
-		else
-		{
-
-			top_atoms.push_back(*neighbor);
-			cout << "here1" <<endl;
-
-
-		}
-
-	}
-//TODO: set the atom at bottom region and top region. change energy crack atom
-
-
+    //TODO: set the atom at bottom region and top region. change energy crack atom
 }
 
-template <int dim>
-double CrackAtom <dim>::energyCrackAtom(CrackAtom <dim>* crack_atom, double Rcut , double sigma, double epsilon)
-{
+template<int dim> double CrackAtom<dim>::energyCrackAtom(CrackAtom<dim> *crack_atom, double Rcut, double sigma, double epsilon) {
+	Energy<dim> energy(sigma, epsilon);
+	this->brittle_crack_atom = crack_atom;
+	double cut_radius = Rcut;
+	double debond_energy = 0.0;
 
-	Energy <dim> energy (sigma, epsilon);
-	double debond_energy=0;
+    LOOP_OVER_ATOMS(this->bottom_atoms, i,
+		Point<dim> bottom_atom_material_position = this->bottom_atoms->getMaterialPosition(i);
+		double bottom_atom_x = bottom_atom_material_position.GetXCoord();
+		double bottom_atom_y = bottom_atom_material_position.GetYCoord();
 
-	this -> brittle_crack_atom=crack_atom;
-	double cut_radius=Rcut;
-
-	vector < Atom <dim>* > top_atoms=crack_atom->getCrackTopAtoms();
-	vector < Atom <dim>* > bottom_atoms=crack_atom->getCrackBottomAtoms();
-
-	typedef typename vector < Atom <dim>* >::iterator At;
-
-	for (At bottom_atom=bottom_atoms.begin(); bottom_atom!= bottom_atoms.end(); ++bottom_atom)
-	{
-
-		Point <dim> bottom_atom_material_position=bottom_atom.GetMaterialPosition();
-
-		double bottom_atom_x=bottom_atom_material_position.GetXCoord();
-		double bottom_atom_y=bottom_atom_material_position.GetYCoord();
-
-		for (At top_atom=top_atoms.begin(); top_atom!=top_atoms.end() ; ++top_atom)
-		{
-
-			Point <dim> top_atom_material_position=top_atom.GetMaterialPosition();
-
-			double top_atom_x=top_atom_material_position.GetXCoord();
-			double top_atom_y=top_atom_material_position.GetYCoord();
-
-			double distance = pow((top_atom_x-bottom_atom_x),2)+pow((top_atom_y-bottom_atom_y),2);
-
-			if (distance < (cut_radius*cut_radius) )
-			{
-
-				double interatomic_energy = energy.InteratomicEnergy (top_atom, bottom_atom);
-				debond_energy+=interatomic_energy;
-
+        LOOP_OVER_ATOMS(this->top_atoms, j,
+			Point<dim> top_atom_material_position = this->top_atoms->getMaterialPosition(j);
+			double top_atom_x = top_atom_material_position.GetXCoord();
+			double top_atom_y = top_atom_material_position.GetYCoord();
+			double distance = pow((top_atom_x - bottom_atom_x), 2) + pow((top_atom_y - bottom_atom_y), 2);
+			if(distance < (cut_radius * cut_radius)) {
+                // FIXME: Get original positions for atoms on global set or just pass dist/rsq to this function
+				double interatomic_energy = energy.InteratomicEnergy(i, j);
+				debond_energy += interatomic_energy;
 			}
+		)
+	)
 
-		}
-
-	}
-
-	return (debond_energy);
-
+	return debond_energy;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

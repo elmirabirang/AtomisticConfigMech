@@ -28,10 +28,10 @@ set(CORE_CPP_FILENAMES
     matrix.cpp
     modification_interaction_list_3d.cpp
     neighbors.cpp
-    neighbors_cell_based.cpp
+    #neighbors_cell_based.cpp
     #point.cpp
     read_dump_file.cpp
-    subcell.cpp
+    #subcell.cpp
     third_order_tensor.cpp
     unrelaxed_config.cpp
     write_data_file.cpp
@@ -89,9 +89,9 @@ target_include_directories(engrelease3d PUBLIC "include")
 target_link_libraries(engrelease3d ${CERES_LIBRARIES})
 
 # 2D Energy Release (LJ)
-add_executable(eng_release2d src/test/energy_release_2d.cpp $<TARGET_OBJECTS:core> $<TARGET_OBJECTS:kernels>)
-target_include_directories(eng_release2d PUBLIC "include")
-target_link_libraries(eng_release2d ${CERES_LIBRARIES})
+#add_executable(eng_release2d src/test/energy_release_2d.cpp $<TARGET_OBJECTS:core> $<TARGET_OBJECTS:kernels>)
+#target_include_directories(eng_release2d PUBLIC "include")
+#target_link_libraries(eng_release2d ${CERES_LIBRARIES})
 
 # Silicon (Stillinger-Weber)
 add_executable(silicon src/test/test_silicon.cpp $<TARGET_OBJECTS:core> $<TARGET_OBJECTS:kernels>)

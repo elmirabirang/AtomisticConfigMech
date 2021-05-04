@@ -11,50 +11,40 @@
 
 #pragma once
 
-#include <vector>
-//---
 #include "atom.h"
 #include "point.h"
 #include "matrix.h"
 #include "third_order_tensor.h"
 
-using namespace std;
-template <int dim>
-class Bond{
-
+template<int dim> class Bond {
 public:
-	Bond();
-	~Bond();
+    Bond(Atoms<dim> *atoms_) : atoms(atoms_) {};
+    ~Bond() {};
 
-	Point <dim> MaterialBondVec(Atom <dim> atoma, Atom <dim> atomb);
-	Point <dim> SpatialBondVec(Atom<dim> atoma, Atom<dim> atomb);
-	Point <dim> InitialBondVec(Atom<dim> atoma, Atom<dim> atomb);
+    Point<dim> MaterialBondVec(int i, int j);
+    Point<dim> SpatialBondVec(int i, int j);
+    Point<dim> InitialBondVec(int i, int j);
 
-	double MaterialBondDistance(Atom<dim> atoma, Atom<dim> atomb);
-	double SpatialBondDistance(Atom<dim> atoma, Atom<dim> atomb);
-	double InitialBondDistance(Atom <dim> atoma, Atom <dim> atomb);
+    double MaterialBondDistance(int i, int j);
+    double SpatialBondDistance(int i, int j);
+    double InitialBondDistance(int i, int j);
 
-	Point <dim> MaterialBondNormal(Atom<dim> atoma,Atom<dim> atomb);
-	Point <dim> SpatialBondNormal(Atom<dim> atoma, Atom<dim> atomb);
+    Point<dim> MaterialBondNormal(int i, int j);
+    Point<dim> SpatialBondNormal(int i, int j);
 
-	double MaterialBondStretch(Atom<dim> atoma,Atom<dim> atomb);
-	double SpatialBondStretch(Atom<dim> atoma, Atom<dim> atomb);
-	double InitialBondStretch (Atom <dim> atoma, Atom <dim> atomb);
+    double MaterialBondStretch(int i, int j);
+    double SpatialBondStretch(int i, int j);
+    double InitialBondStretch(int i, int j);
 
-	Point <dim> ResultantBondVec_Material(Atom <dim> atoma);
-	Point <dim> ResultantBondVec_Spatial(Atom <dim> atoma);
+    Point<dim> ResultantBondVec_Material(int i);
+    Point<dim> ResultantBondVec_Spatial(int i);
 
-	Point <dim> RotationAxis(Atom <dim> atoma, Atom <dim> atomb);
-	double RotationAngle(Atom <dim> atoma, Atom <dim> atomb);
-	SecondTensor <double> RotationMatrix(Atom <dim> atoma, Atom <dim> atomb);
-	ThirdTensor <double> DerivRotMat_RotAxis(Atom <dim> atoma, Atom <dim> atomb);
-	ThirdTensor <double> DerivRotMat_RotAngle(Atom <dim> atoma, Atom <dim> atomb);
-
-
-
+    Point<dim> RotationAxis(Point<dim> spatial_bond_vec, Point<dim> material_bond_vec);
+    double RotationAngle(Point<dim> spatial_bond_vec, Point<dim> material_bond_vec);
+    SecondTensor<double> RotationMatrix(Point<dim> spatial_bond_vec, Point<dim> material_bond_vec);
+    ThirdTensor<double> DerivRotMat_RotAxis(int i, int j);
+    ThirdTensor<double> DerivRotMat_RotAngle(int i, int j);
 
 private:
-
-	Atom<dim> atomi;
-	Atom<dim> atomj;
+    Atoms<dim> *atoms;
 };

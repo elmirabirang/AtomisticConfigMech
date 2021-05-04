@@ -1,1 +1,1 @@
-template <int dim> bool ConfigForceCriterion (vector < Atom <dim>* > atoms);
+template<int dim> bool ConfigForceCriterion(Atoms<dim> *atoms);

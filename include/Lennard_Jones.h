@@ -20,24 +20,15 @@
 
 using namespace std;
 
-template <int dim>
-class LennardJones{
+template<int dim> class LennardJones{
+public:
+    LennardJones();
+    ~LennardJones();
+    double LennardJones_Classic(int i, int j, double epsilon, double sigma);
+    double LennardJones_Configurational(int i, int j, double epsilon, double sigma);
+    double LennardJones_Deformational(int i, int j, double epsilon, double sigma);
 
-	public:
-
-		LennardJones();
-		~LennardJones();
-
-		double LennardJones_Classic(Atom <dim> &atom_Alpha, Atom <dim> &atom_beta, double epsilon, double sigma);
-
-		double LennardJones_Configurational(Atom <dim> &atom_Alpha, Atom <dim> &atom_beta, double epsilon, double sigma);
-
-		double LennardJones_Deformational(Atom <dim> &atom_Alpha, Atom <dim> &atom_beta, double epsilon, double sigma);
-
-	private:
-
-		Atom <dim> atomi;
-		Atom <dim> atomj;
-
+private:
+    Atoms<dim> *atoms;
 };
 

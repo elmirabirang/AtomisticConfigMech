@@ -15,80 +15,47 @@
 
 
 #include <vector>
-#include <string>
-#include <iostream>
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
-#include <sstream>
 //---
 #include "atom.h"
-#include "bond.h"
 #include "force.h"
 
-using namespace std;
+template<int dim> void AtomicStress(Atoms<dim> *atoms) {
+	Force<dim> force(atoms, 1.0, 1.0);
 
-template <int dim>
-void AtomicStress(vector <Atom <dim>* > atoms)
-{
-	typedef typename vector < Atom <2>* >::const_iterator At;
-	Bond <dim> bond;
-	Force <dim> force(1.0,1.0);
+    LOOP_OVER_ATOMS(atoms, i,
+    	double stress_11 = 0.0;
+    	double stress_12 = 0.0;
+    	double stress_21 = 0.0;
+    	double stress_22 = 0.0;
+    	double vonMisesStress = 0.0;
+    	double vonMisesStressSquared = 0.0;
 
-    for (At atom=atoms.begin(); atom!=atoms.end(); ++atom)
-    {
+        LOOP_OVER_ATOM_NEIGHBORS(atoms, i, j,
+    		Point<dim> InteratomicSpatialVec = atoms->getSpatialPosition(i) - atoms->getSpatialPosition(j);
+    		double InteratomicSpatialVec_X = InteratomicSpatialVec.GetXCoord();
+    		double InteratomicSpatialVec_Y = InteratomicSpatialVec.GetYCoord();
 
-    	vector <Atom <dim>*> neighbors= (*atom)->Neighbor();
+    		Point<dim> InteratomicForce = force.BondForce(i, j);
+    		double InteratomicForce_X = InteratomicForce.GetXCoord();
+    		double InteratomicForce_Y = InteratomicForce.GetYCoord();
 
-    	double stress_11=0.0;
-    	double stress_12=0.0;
-    	double stress_21=0.0;
-    	double stress_22=0.0;
-    	double vonMisesStress=0.;
-    	double vonMisesStressSquared=0.;
+    		stress_11 = stress_11 + InteratomicSpatialVec_X * InteratomicForce_X;
+    		stress_12 = stress_12 + InteratomicSpatialVec_X * InteratomicForce_Y;
+    		stress_21 = stress_21 + InteratomicSpatialVec_Y * InteratomicForce_X;
+    		stress_22 = stress_22 + InteratomicSpatialVec_Y * InteratomicForce_Y;
+    	)
 
-		Atom <2> *atm;
-		atm=*atom;
-
-    	for (At neighbor=neighbors.begin(); neighbor!=neighbors.end(); ++neighbor)
-    	{
-
-			Atom <2> *neigh;
-			neigh=*neighbor;
-
-    		Point <dim> InteratomicSpatialVec=bond.SpatialBondVec(*atm,*neigh);
-
-    		double InteratomicSpatialVec_X=InteratomicSpatialVec.GetXCoord();
-    		double InteratomicSpatialVec_Y=InteratomicSpatialVec.GetYCoord();
-
-    		Point <dim> InteratomicForce=force.BondForce(*atm,*neigh);
-
-    		double InteratomicForce_X=InteratomicForce.GetXCoord();
-    		double InteratomicForce_Y=InteratomicForce.GetYCoord();
-
-    		stress_11=stress_11+InteratomicSpatialVec_X*InteratomicForce_X;
-    		stress_12=stress_12+InteratomicSpatialVec_X*InteratomicForce_Y;
-    		stress_21=stress_21+InteratomicSpatialVec_Y*InteratomicForce_X;
-    		stress_22=stress_22+InteratomicSpatialVec_Y*InteratomicForce_Y;
-
-    	}
-
-    	vector <double> AtomicStress;
-
+    	std::vector<double> AtomicStress;
     	AtomicStress.push_back(stress_11);
     	AtomicStress.push_back(stress_12);
     	AtomicStress.push_back(stress_21);
     	AtomicStress.push_back(stress_22);
-
-    	vonMisesStressSquared=pow(stress_11,2)+pow(stress_22,2)+6*pow(stress_12,2)-2*(stress_11*stress_22);
-    	vonMisesStress=sqrt(vonMisesStressSquared);
-
+    	vonMisesStressSquared = pow(stress_11, 2) + pow(stress_22, 2) + 6 * pow(stress_12, 2) - 2 * (stress_11 * stress_22);
+    	vonMisesStress = sqrt(vonMisesStressSquared);
     	AtomicStress.push_back(vonMisesStress);
-
-    	(*atom)->setAtomicStress(AtomicStress);
-
-    }
-
+        atoms->setAtomicStress(i, AtomicStress);
+    )
 }
 
 

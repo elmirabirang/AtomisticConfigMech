@@ -13,16 +13,16 @@
 
 #include <math.h>
 
-template <int dim> class Point {
+template<int dim> class Point {
 public:
     Point() {}
 	Point(double x_value, double y_value, double z_value) : x(x_value), y(y_value), z(z_value) {}
 	Point(double x_value, double y_value) : x(x_value), y(y_value) {}
 	~Point() {}
 
-	double GetXCoord() { return this->x; }
-	double GetYCoord() { return this->y; }
-	double GetZCoord() { return this->z; }
+	double GetXCoord() const { return this->x; }
+	double GetYCoord() const { return this->y; }
+	double GetZCoord() const { return this->z; }
 	void SetXCoord(double x_value) { this->x = x_value; }
 	void SetYCoord(double y_value) { this->y = y_value; }
 	void SetZCoord(double z_value) { this->z = z_value; }
@@ -51,7 +51,36 @@ public:
         return Point<dim>(this->GetXCoord() * factor, this->GetYCoord() * factor, this->GetZCoord() * factor);
     }
 
-	double PointNorm() {
+	Point<dim> operator/(double factor) {
+        double inv_factor = 1.0 / factor;
+        if(dim == 2) {
+            return Point<dim>(this->GetXCoord() * inv_factor, this->GetYCoord() * inv_factor);
+        }
+
+        return Point<dim>(this->GetXCoord() * inv_factor, this->GetYCoord() * inv_factor, this->GetZCoord() * inv_factor);
+    }
+
+    Point<dim> operator+=(double value) {
+        this->x += value;
+        this->y += value;
+        if(dim == 3) {
+            this->z += value;
+        }
+
+        return *this;
+    }
+
+	Point<dim> operator+=(const Point<dim>& p) {
+        this->x += p.GetXCoord();
+        this->y += p.GetYCoord();
+        if(dim == 3) {
+            this->z += p.GetZCoord();
+        }
+
+        return *this;
+    }
+
+	double norm() {
         double normsq = this->x * this->x + this->y * this->y;
         if(dim == 3) {
             normsq += this->z * this->z;
@@ -67,3 +96,7 @@ private:
 	double y;
 	double z;
 };
+
+template<int dim> Point<dim> operator+(const double lhs, const Point<dim>& rhs) {
+    return Point<dim>(lhs + rhs.GetXCoord(), lhs + rhs.GetYCoord(), lhs + rhs.GetZCoord());
+} 
